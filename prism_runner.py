@@ -17,7 +17,7 @@ ranges = [
     (0, 15)   # bottom_corner_y
 ]
 
-# Get ath to prism directory from config.txt
+# Get path to prism directory from config.txt
 with open("config.txt", "r") as file:
     prism_path = file.read().strip()
 
