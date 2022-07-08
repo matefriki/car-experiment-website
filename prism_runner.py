@@ -17,8 +17,9 @@ ranges = [
     (0, 15)   # bottom_corner_y
 ]
 
-# Path to prism directory
-prism_path = "/Users/nick/Documents/Programming/Graz/filip/neurips/prism/prism/bin/prism"
+# Get ath to prism directory from config.txt
+with open("config.txt", "r") as file:
+    prism_path = file.read().strip()
 
 # Split arguments into array of strings
 starting_state = [arg for arg in input().split(" ") if arg]
