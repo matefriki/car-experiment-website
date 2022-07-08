@@ -18,6 +18,6 @@ Next, install the prism model checker, following the instructions given by the w
 
 For Prism to work, it may be necessary to install the Java JDK if it is not already available. Whether Prism is working can be verified by running the `prism` executable found in the bin directory.
 
-After that, run the command `npm install` from the main directory
+After that, run the command `npm install` from the main directory.
 
 Finally, put the path to the Prism executable found in the bin directory into the config.txt file.
