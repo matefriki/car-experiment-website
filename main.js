@@ -21,7 +21,7 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
-let accessible_files = ["script.js", "style.css", "person.png", "car.png", "scene.png", "handle.png", "socket.io/socket.io.js"];
+let accessible_files = ["script.js", "style.css", "person.png", "car.png", "scene.png", "handle.png", "socket.io/socket.io.js", "fonts/Barlow-SemiBold.ttf"];
 accessible_files.map((file_name) => {
   app.get(`/${file_name}`, (req, res) => {
     res.sendFile(__dirname + `/${file_name}`);
