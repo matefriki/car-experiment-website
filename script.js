@@ -450,7 +450,7 @@ function animatePath(path) {
             person.y = (world_height - parseInt(path["ped_y"][path_ind])) * unit;
 
             // Show visibility status
-            block.tint = (path["visibility"][path_ind] == "0" ? 0xFF0000 : 0x03adfc);
+            block.tint = (path["visibility"][path_ind] == "false" ? 0xFF0000 : 0x03adfc);
 
             // Reset delay
             time = 0.0;
