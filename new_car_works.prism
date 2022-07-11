@@ -1,5 +1,7 @@
 mdp
 
+const int max_dist = 20000;
+
 const int street_length = 100;
 const int sidewalk_height = 2;
 
@@ -60,10 +62,10 @@ formula s4 = (int_s4 > block_x1) & (int_s4 < block_x2); // (int_s4, block_y1)
 
 // distance formulas for car to pedestrian and each intersection (above)
 formula dist_ped = ((x2 - x1)*(x2 - x1)) + ((y2 - y1)*(y2 - y1));
-formula dist_s1 =  s1 ? ((block_x1 - x1)*(block_x1 - x1)) + ((int_s1 - y1)*(int_s1 - y1)) : 20000;
-formula dist_s2 = s2 ? ((int_s2 - x1)*(int_s2 - x1)) + ((block_y2 - y1)*(block_y2 - y2)) : 20000;
-formula dist_s3 = s3 ? ((block_x2 - x1)*(block_x2 - x1)) + ((int_s3 - y1)*(int_s3 - y1)) : 20000;
-formula dist_s4 = s4 ? ((int_s4 - x1)*(int_s4 - x1)) + ((int_s4 - y1)*(int_s4 - y1)) : 20000;
+formula dist_s1 =  s1 ? ((block_x1 - x1)*(block_x1 - x1)) + ((int_s1 - y1)*(int_s1 - y1)) : max_dist;
+formula dist_s2 = s2 ? ((int_s2 - x1)*(int_s2 - x1)) + ((block_y2 - y1)*(block_y2 - y2)) : max_dist;
+formula dist_s3 = s3 ? ((block_x2 - x1)*(block_x2 - x1)) + ((int_s3 - y1)*(int_s3 - y1)) : max_dist;
+formula dist_s4 = s4 ? ((int_s4 - x1)*(int_s4 - x1)) + ((int_s4 - y1)*(int_s4 - y1)) : max_dist;
 
 module Car
 	car_x : [0..street_length] init 0; // {car_x}
