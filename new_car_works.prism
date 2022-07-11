@@ -9,6 +9,10 @@ const int crosswalk_pos = 80;
 const int crosswalk_width = 10;
 const int crosswalk_height = 11;
 
+const int world_height = (sidewalk_height * 2) + crosswalk_height;
+
+const int max_dist = (street_length * street_length) + (world_height * world_height) + 100;
+
 const int max_speed = 3;
 
 const double neutral = 0.5;
@@ -26,8 +30,6 @@ const int block_y2 = sidewalk_height + block_height; //{top_corner_y}
 // car properties
 const int car_height = 2;
 const int car_width = max_speed;
-
-const int world_height = (sidewalk_height * 2) + crosswalk_height;
 
 global turn : [0..2] init 0;
 
