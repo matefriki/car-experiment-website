@@ -44,7 +44,6 @@ formula dist = max(ped_x-car_x, car_x - ped_x) + max(ped_y - car_y, car_y - ped_
 formula safe_dist = dist > 15;
 formula is_on_sidewalk = (ped_y < sidewalk_height) | (ped_y > sidewalk_height + crosswalk_height);
 formula wait_prob = (crosswalk_pos - ped_x) / 10;
-formula crash = ((ped_x >= car_x) & (ped_x <= car_x + car_width)) & ((ped_y >= car_y) & (ped_y <= car_y + car_height));
 
 // for calculating if pedestrian is blocked from car view
 formula x1 = car_x + car_width;
