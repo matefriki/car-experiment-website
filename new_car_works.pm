@@ -32,7 +32,10 @@ const int car_width = max_speed;
 global turn : [0..2] init 0;
 
 // simple bubble of ped and car within a certain distance of each other
-label "crash" = ((ped_x >= car_x) & (ped_x <= car_x + car_width)) & ((ped_y >= car_y) & (ped_y <= car_y + car_height));
+formula crash = ((ped_x >= car_x) & (ped_x <= car_x + car_width)) & ((ped_y >= car_y) & (ped_y <= car_y + car_height));
+
+label "crash" = crash;
+label "givereward" = ((finished=0) & (car_x = street_length));
 
 // checks distances of pedestrian to car and vis line intersections from the car to the block
 label "blocked_vis" = (dist_ped >= min(dist_s1, dist_s2, dist_s3, dist_s4));
@@ -157,3 +160,10 @@ module Pedestrian
 	// [] (turn = 2)&(crash_over) -> true;
 endmodule
 
+rewards
+    [Acc] true : -3;
+    [Brk] true : -2;
+    //[Nop] true : -1;
+    [Success] true : 10;
+//    (finished=0) & (car_x = street_length) : 10;
+endrewards
