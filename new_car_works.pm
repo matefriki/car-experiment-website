@@ -67,6 +67,8 @@ formula dist_s2 = s2 ? ((int_s2 - x1)*(int_s2 - x1)) + ((block_y2 - y1)*(block_y
 formula dist_s3 = s3 ? ((block_x2 - x1)*(block_x2 - x1)) + ((int_s3 - y1)*(int_s3 - y1)) : max_dist;
 formula dist_s4 = s4 ? ((int_s4 - x1)*(int_s4 - x1)) + ((int_s4 - y1)*(int_s4 - y1)) : max_dist;
 
+formula ped_vis = (dist_ped < min(dist_s1, dist_s2, dist_s3, dist_s4));
+
 module Car
 	car_x : [0..street_length] init 0; // {car_x}
 	car_v : [0..max_speed] init 0;
@@ -96,8 +98,8 @@ module Car
 endmodule
 
 module Pedestrian
-	ped_x : [0..street_length] init {person_x};
-    ped_y : [0..world_height] init {person_y};
+	ped_x : [0..street_length] init (crosswalk_pos + 5); // {person_x}
+	ped_y : [0..world_height] init 0; //{person_y}
 
    // assumptions:
 		// 1. pedestrian goal is to cross the street
