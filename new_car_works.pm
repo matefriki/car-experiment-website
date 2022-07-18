@@ -69,6 +69,7 @@ formula dist_s2 = s2 ? ((int_s2 - x1)*(int_s2 - x1)) + ((block_y2 - y1)*(block_y
 formula dist_s3 = s3 ? ((block_x2 - x1)*(block_x2 - x1)) + ((int_s3 - y1)*(int_s3 - y1)) : max_dist;
 formula dist_s4 = s4 ? ((int_s4 - x1)*(int_s4 - x1)) + ((int_s4 - y1)*(int_s4 - y1)) : max_dist;
 
+formula car_fast = (dist_ped <= ((car_v*car_v) + car_v)/2);
 formula ped_vis = (dist_ped < min(dist_s1, dist_s2, dist_s3, dist_s4));
 
 module Car
@@ -76,35 +77,35 @@ module Car
 	car_v : [0..max_speed] init 0;
 	car_y : [0..world_height] init 5; // {car_y}
 	visibility : [0..1] init 1;
-    finished : [0..1] init 0;
+	finished : [0..1] init 0;
 
-    [] (turn = 0) & (finished=0) & (car_x < street_length) & (!crash) -> // Accelerate
-    // change probabilities based on type of driver and/or environment
-    0.49: (car_v' = min(max_speed, car_v + 2))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 2)))&(turn' = 1) +
-    0.49: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 1) +
-    0.019: (car_x' = min(street_length, car_x + car_v + 0))&(turn' = 1)+
-    0.001: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 1);
-    [] (turn = 0) & (finished=0) & (car_x < street_length) & (!crash) -> // Brake
-    // change probabilities based on type of driver and/or environment
-    0.49: (car_v' = max(0, car_v - 2))&(car_x' = min(street_length, car_x + max(0, car_v - 2)))&(turn' = 1) + 
-    0.49: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 1) +
-    0.019: (car_x' = min(street_length, car_x + car_v + 0))&(turn' = 1) +
-    0.001: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 1);
-    [] (turn = 0) & (finished=0) & (car_x < street_length) & (!crash) -> // Stays the same speed
-    0.95: (car_x' = min(street_length, car_x + max(0, car_v)))&(turn' = 1) +
-    0.025: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 1) + 
-    0.025: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 1);
+	[] (turn = 0) & (finished=0) & (car_x < street_length) & (!crash) -> // Accelerate
+	// change probabilities based on type of driver and/or environment
+	0.49: (car_v' = min(max_speed, car_v + 2))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 2)))&(turn' = 1) +
+	0.49: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 1) +
+	0.019: (car_x' = min(street_length, car_x + car_v + 0))&(turn' = 1)+
+	0.001: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 1);
+	[] (turn = 0) & (finished=0) & (car_x < street_length) & (!crash) -> // Brake
+	// change probabilities based on type of driver and/or environment
+	0.49: (car_v' = max(0, car_v - 2))&(car_x' = min(street_length, car_x + max(0, car_v - 2)))&(turn' = 1) + 
+	0.49: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 1) +
+	0.019: (car_x' = min(street_length, car_x + car_v + 0))&(turn' = 1) +
+	0.001: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 1);
+	[] (turn = 0) & (finished=0) & (car_x < street_length) & (!crash) -> // Stays the same speed
+	0.95: (car_x' = min(street_length, car_x + max(0, car_v)))&(turn' = 1) +
+	0.025: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 1) + 
+	0.025: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 1);
 
-    [] (turn = 0) & (finished = 0) & (car_x = street_length) -> (finished'=1);
-    [] (turn = 0) & (finished = 0) & (crash) -> (finished'=1);
-    [] (turn=0) & (finished = 1) -> true;
+	[] (turn = 0) & (finished = 0) & (car_x = street_length) -> (finished'=1);
+	[] (turn = 0) & (finished = 0) & (crash) -> (finished'=1);
+	[] (turn=0) & (finished = 1) -> true;
 
 
-    // changes the visibility variable so we know when the car is able/unable to see ped
-    [] (turn = 1)&(ped_vis) ->
-    (visibility' = 1)&(turn' = 2);
-    [] (turn = 1)&(!ped_vis) ->
-    (visibility' = 0)&(turn' = 2);
+	// changes the visibility variable so we know when the car is able/unable to see ped
+	[] (turn = 1)&(ped_vis) ->
+	(visibility' = 1)&(turn' = 2);
+	[] (turn = 1)&(!ped_vis) ->
+	(visibility' = 0)&(turn' = 2);
 	 
 endmodule
 
@@ -130,7 +131,7 @@ module Pedestrian
 	// 2. 40% probability of crossing street when at the crosswalk
 	// SUBJECT TO CHANGE
 	// 30% chance of walking left or right is it doesn't cross the street
-	[] (turn = 2)&(ped_x > crosswalk_pos)&(ped_x < (crosswalk_pos + crosswalk_width)) ->
+	[] (turn = 2)&(!ped_vis | !car_fast) &(ped_x > crosswalk_pos)&(ped_x < (crosswalk_pos + crosswalk_width)) ->
 		0.4: (ped_y' = min(ped_y + 1, world_height))&(turn' = 0) + // Up
 		0.3: (ped_x' = max(ped_x - 1, 0))&(turn' = 0) + // Left
 		0.3: (ped_x' = min(ped_x + 1, street_length))&(turn' = 0); // Right
@@ -139,7 +140,7 @@ module Pedestrian
 	// and is at the crosswalk
 	// SUBJECT TO CHANGE
 	// 90% chance of doing other things
-	[] (turn = 2)&(ped_vis)&(dist_ped <= ((car_v*car_v) + car_v)/2)&(ped_x > crosswalk_pos)&(ped_x < (crosswalk_pos + crosswalk_width)) ->
+	[] (turn = 2)&(ped_vis)&(car_fast)&(ped_x > crosswalk_pos)&(ped_x < (crosswalk_pos + crosswalk_width)) ->
 		0.1: (ped_y' = min(ped_y + 1, world_height))&(turn' = 0) + // Up
 		0.45: (ped_x' = max(ped_x - 1, 0))&(turn' = 0) + // Left
 		0.45: (ped_x' = min(ped_x + 1, street_length))&(turn' = 0); // Right
@@ -160,18 +161,12 @@ module Pedestrian
 		0.4*0.01: (ped_x' = max(ped_x - 1, 0))&(turn' = 0) + // Left
 		0.4*0.01: (ped_x' = min(ped_x + 1, street_length))&(turn' = 0); // Right
 
-		// 0.4: (extraVar' = 1);
-	// [] extraVar = 1 ->
-		// all the innards of the 4th action
-	
-	// uncomment this to end path simulation
-	// [] (turn = 2)&(crash_over) -> true;
 endmodule
 
 rewards
 //    [] true : -3;
 //    [] true : -2;
-    //[] true : -1;
-    //[] true : 10;
+//    [] true : -1;
+//    [] true : 10;
     (finished=0) & (car_x = street_length) : 10;
 endrewards
