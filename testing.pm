@@ -178,6 +178,5 @@ rewards
 //    [] true : -1;
 //    [] true : 10;
 	(finished=0) & (car_x = street_length) : 10;
-	(car_x != street_length) : -3;
 
 endrewards
