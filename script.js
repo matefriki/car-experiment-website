@@ -201,9 +201,9 @@ function forceBlur() {
 /* Parse the ranges (inclusive) found in the html that follow the format data-range="lower:upper"
    Returns an array of format [lower, upper] if the range is valid, otherwise null */
 function parseRange(rangeStr) {
-    if(!rangeStr) return null;
+    if (!rangeStr) return null;
     let range = rangeStr.split(':').map((x) => parseInt(x));
-    if(range.length != 2 || range.some((x) => isNaN(x))) return null;
+    if (range.length != 2 || range.some((x) => isNaN(x))) return null;
     return range;
 }
 
@@ -232,15 +232,15 @@ function adjustBlock() {
 function performChanges(inp) {
     // Gets reference to associated Pixi object defined by the input's data attribute data-obj="pixi_object" (eg. "person", "car")
     let obj_name = inp.dataset.obj;
-    if(!obj_name) return;
+    if (!obj_name) return;
     let obj = app.stage.getChildByName(obj_name);
     // Attempt to parse the input's value as an integer
     let value = parseInt(inp.innerHTML) * unit;
-    if(isNaN(value)) value = unit;
+    if (isNaN(value)) value = unit;
     // Pixi object property to change, defined by data-prop="object_property" (eg. "x", "y")
     let prop = inp.dataset.prop;
     // If changing y value then flip vertically
-    if(prop == "y") value = (world_height * unit) - value;
+    if (prop == "y") value = (world_height * unit) - value;
     /* Assign the parsed or default value to the desired Pixi object property
        if parse was unsuccessful then use default of 1 unit */
     obj[prop] = value;
@@ -296,7 +296,7 @@ function setProgressScale(scale, seconds) {
 // Makes the loading/progress bar pane either visible or fade away depending on the given boolean
 function setLoadingVisibility(visible) {
     let loadingPane = document.querySelector('.loading');
-    if(visible) {
+    if (visible) {
         loadingPane.classList.remove("fully_hidden");
         loadingPane.style.display = "flex";
     }
@@ -308,14 +308,14 @@ function setControlsActive(active) {
     // Hide the randomize buttons with fade animation
     let randBtns = document.querySelectorAll('.random');
     randBtns.forEach((rand) => {
-        if(active) rand.classList.remove("hidden");
+        if (active) rand.classList.remove("hidden");
         else rand.classList.add("hidden");
     });
 
     // Disable editing of text inputs, though they remain visible
     document.querySelectorAll('.controls .input').forEach((inp) => {
         inp.setAttribute("contenteditable", active ? "true" : "false");
-        if(active) inp.classList.add("editable");
+        if (active) inp.classList.add("editable");
         else inp.classList.remove("editable");
     });
 
@@ -405,7 +405,7 @@ function cornerDragMove() {
         let grid_x = clamp(Math.round(newPosition.x / unit), range_x[0], range_x[1]);
         let grid_y = clamp(Math.round(newPosition.y / unit), range_y[0], range_y[1]);
         // Update the text inputs to reflect new position
-        if(this.name == "top_corner") {
+        if (this.name == "top_corner") {
             top_input_x.innerHTML = grid_x;
             top_input_y.innerHTML = world_height - grid_y;
         } else {
@@ -439,7 +439,7 @@ function animatePath(path) {
     ticker.add((delta) => {
         time += delta;
         // Set the speed the animation will run at (larger is slower)
-        if(time > 2) {
+        if (time > 2) {
             // Make animation play in a loop
             path_ind = (path_ind + 1) % path_length;
 
@@ -450,7 +450,7 @@ function animatePath(path) {
             person.y = (world_height - parseInt(path["ped_y"][path_ind])) * unit;
 
             // Show visibility status
-            block.tint = (path["visibility"][path_ind] == "false" ? 0xFF0000 : 0x03adfc);
+            block.tint = (path["visibility"][path_ind] == "0" ? 0xFF0000 : 0x03adfc);
 
             // Reset delay
             time = 0.0;
