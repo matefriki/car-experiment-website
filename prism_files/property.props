@@ -2,5 +2,4 @@ Pmax = ? [F"crash"]
 
 Pmin = ? [F"crash"]
 
-multi(Pmax = ? [F"crash"], Pmin = ? [F"crash"])
-
+Rmax = ? [C]
