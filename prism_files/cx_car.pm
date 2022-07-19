@@ -83,14 +83,14 @@ module Car
 	visibility : [0..1];
 	finished : [0..1];
 
-	[] (turn = 0) & (finished=0) & (car_x < street_length) & (!crash) -> // Accelerate
+	[Accelerate] (turn = 0) & (finished=0) & (car_x < street_length) & (!crash) -> // Accelerate
 	// change probabilities based on type of driver and/or environment
 	0.45: (car_v' = min(max_speed, car_v + 2))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 2)))&(turn' = 1) +
 	0.45: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 1) +
 	0.09: (car_x' = min(street_length, car_x + car_v + 0))&(turn' = 1)+
 	0.01: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 1);
 
-	[] (turn = 0) & (finished=0) & (car_x < street_length) & (!crash) & (car_v > 0) -> // Brake
+	[Brake] (turn = 0) & (finished=0) & (car_x < street_length) & (!crash) & (car_v > 0) -> // Brake
 	// change probabilities based on type of driver and/or environment
 	0.45: (car_v' = max(0, car_v - 2))&(car_x' = min(street_length, car_x + max(0, car_v - 2)))&(turn' = 1) + 
 	0.45: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 1) +
@@ -98,7 +98,7 @@ module Car
 	0.01: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 1);
 
 	// aggressive car -> would accelerate randomly more likely (0.03) than it would brake (0.02)
-	[] (turn = 0) & (finished=0) & (car_x < street_length) & (!crash) -> // Stays the same speed
+	[Nop] (turn = 0) & (finished=0) & (car_x < street_length) & (!crash) -> // Stays the same speed
 	0.95: (car_x' = min(street_length, car_x + max(0, car_v)))&(turn' = 1) +
 	0.02: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 1) +  //breaks
 	0.03: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 1); //accelerates
