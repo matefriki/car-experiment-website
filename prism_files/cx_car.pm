@@ -20,10 +20,14 @@ const double change_prob2 = 1 - change_prob1;
 // block properties
 const int block_height = 2;
 const int block_width = 5;
-const int block_x1 = crosswalk_pos - 5; // {bottom_corner_x}
-const int block_y1 = sidewalk_height; // {bottom_corner_y}
-const int block_x2 = block_x1 + block_width; // {top_corner_x}
-const int block_y2 = sidewalk_height + block_height; //{top_corner_y}
+const int block_x1;
+//= crosswalk_pos - 5; // {bottom_corner_x}
+const int block_y1;
+// = sidewalk_height; // {bottom_corner_y}
+const int block_x2;
+// = block_x1 + block_width; // {top_corner_x}
+const int block_y2;
+// = sidewalk_height + block_height; //{top_corner_y}
  
 // car properties
 const int car_height = 2;
@@ -185,5 +189,6 @@ endrewards
 // no initial states intializes every variable to 0
 init
 //	(ped_x = (crosswalk_pos + 5) & ped_y = 0 & car_x = 0 & car_v = 0 & turn = 0 & visibility = 1 & finished = 0) |
+	(block_x1 = crosswalk_pos - 5)& (block_y1 = sidewalk_height) & (block_x2 =  block_x1 + block_width) & (block_y2 =  sidewalk_height + block_height) & 
 	(ped_x = (crosswalk_pos + 5) & ped_y = 4 & car_x = 24 & car_v = 1 & turn = 0 & visibility = 1 & finished = 0)
 endinit
