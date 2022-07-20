@@ -180,6 +180,6 @@ rewards
 //    [] true : -2;
 //    [] true : -1;
 //    [] true : 10;
-	[] (finished=0) & (car_x = street_length) : 10;
+	[] (finished=0) & (crash) : 10;
 
 endrewards
