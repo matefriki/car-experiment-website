@@ -1,0 +1,4 @@
+.ipynb_checkpoints/*
+*.ipynb
+config.txt
+node_modules/*
