@@ -1,9 +1,9 @@
 mdp
 
-const int street_length = 100;
+const int street_length = 50;
 const int sidewalk_height = 2;
 
-const int crosswalk_pos = 80;
+const int crosswalk_pos = 30;
 const int crosswalk_width = 10;
 const int crosswalk_height = 11;
 
@@ -30,7 +30,7 @@ const int car_height = 2;
 const int car_width = max_speed;
 const int car_y = 5;
 
-global turn : [0..2];
+global turn : [0..2] init 0;
 
 // simple bubble of ped and car within a certain distance of each other
 formula crash = ((ped_x >= car_x) & (ped_x <= car_x + car_width)) & ((ped_y >= car_y) & (ped_y <= car_y + car_height));
@@ -115,7 +115,8 @@ module Pedestrian
 	ped_x : [0..street_length] init (crosswalk_pos + 5); // {person_x}
 	ped_y : [0..world_height] init 0; //{person_y}
 
-   // assumptions:
+
+ // assumptions:
 		// 1. pedestrian goal is to cross the street
 		// 2. pedestrian can only cross from the bottom of the screen to the top of the screen
 	
@@ -123,16 +124,13 @@ module Pedestrian
 	// with the goal of crossing the street (forward = walk toward cross walk)
 	[] (turn = 2)&(is_on_sidewalk)&(ped_x < crosswalk_pos) ->
 		0.9: (ped_x' = min(ped_x + 1, street_length))&(turn' = 0) + // Right
-		0.08: (ped_x' = max(ped_x - 1, 0))&(turn' = 0) + // Left
-		0.02: (ped_y' = min(ped_y + 1, world_height))&(turn' = 0); // Up
+		0.1: (ped_x' = max(ped_x - 1, 0))&(turn' = 0); // Left
 	[] (turn = 2)&(is_on_sidewalk)&(ped_x > (crosswalk_pos + crosswalk_width)) ->
 		0.9: (ped_x' = max(ped_x - 1, 0))&(turn' = 0) + // Left
-		0.08: (ped_x' = min(ped_x + 1, street_length))&(turn' = 0) + // Right
-		0.02: (ped_y' = min(ped_y + 1, world_height))&(turn' = 0); // Up
+		0.1: (ped_x' = min(ped_x + 1, street_length))&(turn' = 0); // Right
 
 // conditions for ped to start crossing the street
 	// 2.a 40% probability of crossing street when at the crosswalk
-	// SUBJECT TO CHANGE
 	// 30% chance of walking left or right is it doesn't cross the street
 	[] (turn = 2)&(!ped_vis | !car_fast)&(ped_x > crosswalk_pos)&(ped_x < (crosswalk_pos + crosswalk_width)) ->
 		0.4: (ped_y' = min(ped_y + 1, world_height))&(turn' = 0) + // Up
@@ -141,7 +139,6 @@ module Pedestrian
 
 	// 2.b 10% chance of crossing the street given the ped can see the car and is a certain distance away from the car
 	// and is at the crosswalk
-	// SUBJECT TO CHANGE
 	// 90% chance of doing other things
 	[] (turn = 2)&(ped_vis)&(car_fast)&(ped_x > crosswalk_pos)&(ped_x < (crosswalk_pos + crosswalk_width)) ->
 		0.1: (ped_y' = min(ped_y + 1, world_height))&(turn' = 0) + // Up
@@ -152,30 +149,20 @@ module Pedestrian
 	// 3.a condition for if pedestrian is crossing, then ...keep crossing, etx
 	[] (turn = 2)&(ped_y > sidewalk_height) ->
 		0.9: (ped_y' = min(ped_y + 1, world_height))&(turn' = 0) + // Up
-		0.08: (ped_y' = max(ped_y - 1, 0))&(turn' = 0) + // Down
-		0.01: (ped_x' = max(ped_x - 1, 0))&(turn' = 0) + // Left
-		0.01: (ped_x' = min(ped_x + 1, street_length))&(turn' = 0); // Right
+		0.1: (ped_y' = max(ped_y - 1, 0))&(turn' = 0); // Down
 
 // ped avoids car
 	// 3.b. if ped crossing and car at a certain distance then the ped tries to avoid the car
 	[] (turn = 2)&(ped_y > sidewalk_height)&(car_fast) ->
 		// how to show that pedestrian is avoiding the car
 		// adding 40% probability that the pedestrian acts like "normal" like in action 4.
-//		0.6: (ped_y' = min(ped_y + 1, world_height))&(turn' = 0) + // Up
-//		0.4: (ped_y' = max(ped_y - 1, 0))&(turn' = 0); // Down
-		(0.3 + (0.4*0.9)):(ped_y' = min(ped_y + 1, world_height))&(turn' = 0) + // Up
-		(0.3 + (0.4*0.08)): (ped_y' = max(ped_y - 1, 0))&(turn' = 0) + // Down
-		0.4*0.01: (ped_x' = max(ped_x - 1, 0))&(turn' = 0) + // Left
-		0.4*0.01: (ped_x' = min(ped_x + 1, street_length))&(turn' = 0); // Right
+		0.6: (ped_y' = min(ped_y + 1, world_height))&(turn' = 0) + // Up
+		0.4: (ped_y' = max(ped_y - 1, 0))&(turn' = 0); // Down
 
 endmodule
 
 rewards
 
-//    [] true : -3;
-//    [] true : -2;
-//    [] true : -1;
-//    [] true : 10;
 	[] (finished=0) & (car_x = street_length) : 10;
 
 endrewards

@@ -1,9 +1,9 @@
 mdp
 
-const int street_length = 100;
+const int street_length = 50;
 const int sidewalk_height = 2;
 
-const int crosswalk_pos = 80;
+const int crosswalk_pos = 30;
 const int crosswalk_width = 10;
 const int crosswalk_height = 11;
 
@@ -28,6 +28,7 @@ const int block_y2 = sidewalk_height + block_height; //{top_corner_y}
 // car properties
 const int car_height = 2;
 const int car_width = max_speed;
+const int car_y = 5;
 
 global turn : [0..2] init 0;
 
@@ -73,9 +74,8 @@ formula car_fast = (dist_ped <= ((car_v*car_v) + car_v)/2);
 formula ped_vis = (dist_ped < min(dist_s1, dist_s2, dist_s3, dist_s4));
 
 module Car
-	car_x : [0..street_length] init 0; // {car_x}
+	car_x : [0..street_length] init 0; 
 	car_v : [0..max_speed] init 0;
-	car_y : [0..world_height] init 5; // {car_y}
 	visibility : [0..1] init 1;
 	finished : [0..1] init 0;
 
@@ -114,8 +114,8 @@ module Car
 endmodule
 
 module Pedestrian
-	ped_x : [0..street_length] init (crosswalk_pos + 5); // {person_x}
-	ped_y : [0..world_height] init 0; //{person_y}
+	ped_x : [0..street_length] init (crosswalk_pos + 5);
+	ped_y : [0..world_height] init 0;
 
   // assumptions:
 		// 1. pedestrian goal is to cross the street
@@ -134,7 +134,6 @@ module Pedestrian
 
 // conditions for ped to start crossing the street
 	// 2.a 40% probability of crossing street when at the crosswalk
-	// SUBJECT TO CHANGE
 	// 30% chance of walking left or right is it doesn't cross the street
 	[] (turn = 2)&(!ped_vis | !car_fast)&(ped_x > crosswalk_pos)&(ped_x < (crosswalk_pos + crosswalk_width)) ->
 		0.4: (ped_y' = min(ped_y + 1, world_height))&(turn' = 0) + // Up
@@ -143,7 +142,6 @@ module Pedestrian
 
 	// 2.b 10% chance of crossing the street given the ped can see the car and is a certain distance away from the car
 	// and is at the crosswalk
-	// SUBJECT TO CHANGE
 	// 90% chance of doing other things
 	[] (turn = 2)&(ped_vis)&(car_fast)&(ped_x > crosswalk_pos)&(ped_x < (crosswalk_pos + crosswalk_width)) ->
 		0.1: (ped_y' = min(ped_y + 1, world_height))&(turn' = 0) + // Up
@@ -163,8 +161,6 @@ module Pedestrian
 	[] (turn = 2)&(ped_y > sidewalk_height)&(car_fast) ->
 		// how to show that pedestrian is avoiding the car
 		// adding 40% probability that the pedestrian acts like "normal" like in action 4.
-//		0.6: (ped_y' = min(ped_y + 1, world_height))&(turn' = 0) + // Up
-//		0.4: (ped_y' = max(ped_y - 1, 0))&(turn' = 0); // Down
 		(0.3 + (0.4*0.9)):(ped_y' = min(ped_y + 1, world_height))&(turn' = 0) + // Up
 		(0.3 + (0.4*0.08)): (ped_y' = max(ped_y - 1, 0))&(turn' = 0) + // Down
 		0.4*0.01: (ped_x' = max(ped_x - 1, 0))&(turn' = 0) + // Left
@@ -173,6 +169,5 @@ module Pedestrian
 endmodule
 
 rewards
-
-    (finished=0) & (car_x = street_length) : 10;
+	[] (finished=0) & (car_x = street_length) : 10;
 endrewards
