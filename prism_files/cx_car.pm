@@ -75,7 +75,7 @@ formula ped_vis = (dist_ped < min(dist_s1, dist_s2, dist_s3, dist_s4));
 
 module Car
 	car_x : [0..street_length] init 0; // {car_x}
-	car_v : [0..max_speed] init 0;
+	car_v : [0..max_speed] init 0; // {car_v}
 	visibility : [0..1] init 1;
 	finished : [0..1] init 0;
 	[] (turn = 0) & (finished=0) & (car_x < street_length) & (!crash) -> // Accelerate

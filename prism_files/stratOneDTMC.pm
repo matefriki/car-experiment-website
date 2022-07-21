@@ -74,12 +74,12 @@ formula car_fast = (dist_ped <= ((car_v*car_v) + car_v)/2);
 formula ped_vis = (dist_ped < min(dist_s1, dist_s2, dist_s3, dist_s4));
 
 module Car
-	car_x : [0..street_length] init 0; 
-	car_v : [0..max_speed] init 0;
+	car_x : [0..street_length] init 0; // {car_x}
+	car_v : [0..max_speed] init 0; // {car_v}
 	visibility : [0..1] init 1;
 	finished : [0..1] init 0;
 
-[] (turn = 0) & (finished=0) & (car_x < street_length) & (!crash) & (is_on_sidewalk) & (((car_x - crosswalk_pos) > (2*car_v)) | (((car_x - crosswalk_pos) <= (2*car_v)) & (car_v < 2))) -> // Accelerate
+	[] (turn = 0) & (finished=0) & (car_x < street_length) & (!crash) & (is_on_sidewalk) & (((car_x - crosswalk_pos) > (2*car_v)) | (((car_x - crosswalk_pos) <= (2*car_v)) & (car_v < 2))) -> // Accelerate
 	// change probabilities based on type of driver and/or environment
 	0.45: (car_v' = min(max_speed, car_v + 2))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 2)))&(turn' = 1) +
 	0.45: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 1) +
@@ -114,8 +114,8 @@ module Car
 endmodule
 
 module Pedestrian
-	ped_x : [0..street_length] init (crosswalk_pos + 5);
-	ped_y : [0..world_height] init 0;
+	ped_x : [0..street_length] init (crosswalk_pos + 5); // {person_x}
+	ped_y : [0..world_height] init 0; // {person_y}
 
   // assumptions:
 		// 1. pedestrian goal is to cross the street

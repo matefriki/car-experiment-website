@@ -45,16 +45,19 @@ def make_dtmc():
     
     for i, line in enumerate(lines):
         lines[i] = re.sub("mdp", "dtmc", lines[i])
+        label_match = label_reg.search(line)
+        if label_match:
+            # print(f"Match: {line}")
+            start_ind = line.rfind("init") + 4 if "init" in line else line.rfind("=") + 1
+            label = label_match.group(1)
+            lines[i] = line[:start_ind] + " {{{}}};".format(label)
         strat_match = strategies_label.search(line)
         
         if strat_match:
             for strat in strategy:
                 for j, nothing in enumerate(strat):
                     if actions[j] == strat_name_label.search(strat_match.group(0)).group(0):
-                        index = line.rfind("]") + 1
-                        print(f"lines[{i}]: {lines[i]}")
                         lines[i] = re.sub(strat_regex, f"[] {strat[actions[j]]}  & ", lines[i]) 
-                        print(f"lines[{i}]: {lines[i]}")
 
     replaced = '\n'.join(lines)
     with open("dtmcgenerated.pm", "w") as f:

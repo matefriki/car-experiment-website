@@ -28,6 +28,7 @@ const int block_y2 = sidewalk_height + block_height; //{top_corner_y}
 // car properties
 const int car_height = 2;
 const int car_width = max_speed;
+const int car_y = 5;
 
 global turn : [0..2] init 0;
 
@@ -74,8 +75,7 @@ formula ped_vis = (dist_ped < min(dist_s1, dist_s2, dist_s3, dist_s4));
 
 module Car
 	car_x : [0..street_length] init 0; // {car_x}
-	car_v : [0..max_speed] init 0;
-	car_y : [0..world_height] init 5; // {car_y}
+	car_v : [0..max_speed] init 0; // {car_v}
 	visibility : [0..1] init 1;
 	finished : [0..1] init 0;
 
@@ -129,7 +129,6 @@ module Pedestrian
 		0.02: (ped_y' = min(ped_y + 1, world_height))&(turn' = 0); // Up
 
 	// 2. 40% probability of crossing street when at the crosswalk
-	// SUBJECT TO CHANGE
 	// 30% chance of walking left or right is it doesn't cross the street
 	[] (turn = 2)&(!ped_vis | !car_fast) &(ped_x > crosswalk_pos)&(ped_x < (crosswalk_pos + crosswalk_width)) ->
 		0.4: (ped_y' = min(ped_y + 1, world_height))&(turn' = 0) + // Up
@@ -138,7 +137,6 @@ module Pedestrian
 
 	// 3. 10% chance of crossing the street given the ped can see the car and is a certain distance away from the car
 	// and is at the crosswalk
-	// SUBJECT TO CHANGE
 	// 90% chance of doing other things
 	[] (turn = 2)&(ped_vis)&(car_fast)&(ped_x > crosswalk_pos)&(ped_x < (crosswalk_pos + crosswalk_width)) ->
 		0.1: (ped_y' = min(ped_y + 1, world_height))&(turn' = 0) + // Up
@@ -164,9 +162,5 @@ module Pedestrian
 endmodule
 
 rewards
-//    [] true : -3;
-//    [] true : -2;
-//    [] true : -1;
-//    [] true : 10;
     (finished=0) & (car_x = street_length) : 10;
 endrewards
