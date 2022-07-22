@@ -59,7 +59,7 @@ with open("program.pm", "w") as file:
     file.write(program)
 sleep(.1)
 
-system("{} program.pm -simpath {} path.txt >/dev/null 2>&1".format(prism_path, path_length))
+system("{} program.pm -simpath {} path.txt >/dev/null 2>&1".format(prism_path, path_length)) # >/dev/null 2>&1
 
 def load_path(file_name):
     file = open(file_name, "r")
