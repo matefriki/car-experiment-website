@@ -361,13 +361,13 @@ function carDragMove() {
         let range_y = getInputRange(car_input_y);
         // Round mouse position to fit on grid, and clamp within world boundaries
         let grid_x = clamp(Math.round(new_x / unit), range_x[0], range_x[1]);
-        let grid_y = clamp(Math.round(new_y / unit), range_y[0], range_y[1]);
+        let grid_y = clamp(world_height - Math.round(new_y / unit), range_y[0], range_y[1]);
         // Resize grid coord by size of unit to get new position
         this.x = grid_x * unit;
-        this.y = grid_y * unit;
+        this.y = (world_height - grid_y) * unit;
         // Update text inputs with new position (reflected vertically)
         car_input_x.innerHTML = grid_x;
-        car_input_y.innerHTML = world_height - grid_y;
+        car_input_y.innerHTML = grid_y;
     }
 }
 
@@ -381,13 +381,13 @@ function personDragMove() {
         let range_y = getInputRange(person_input_y);
         // Round mouse position to fit on grid, and clamp within world boundaries
         let grid_x = clamp(Math.round(newPosition.x / unit), range_x[0], range_x[1]);
-        let grid_y = clamp(Math.round(newPosition.y / unit), range_y[0], range_y[1]);
+        let grid_y = clamp(world_height - Math.round(newPosition.y / unit), range_y[0], range_y[1]);
         // Resize grid coord by size of unit to get new position
         this.x = grid_x * unit;
-        this.y = grid_y * unit;
+        this.y = (world_height - grid_y) * unit;
         // Update text inputs with new position (reflected vertically)
         person_input_x.innerHTML = grid_x;
-        person_input_y.innerHTML = world_height - grid_y;
+        person_input_y.innerHTML = grid_y;
     }
 }
 
@@ -403,18 +403,18 @@ function cornerDragMove() {
         range_y = getInputRange(isTopCorner ? top_input_y : bottom_input_y);
         // Round mouse position to fit on grid, and clamp within world boundaries
         let grid_x = clamp(Math.round(newPosition.x / unit), range_x[0], range_x[1]);
-        let grid_y = clamp(Math.round(newPosition.y / unit), range_y[0], range_y[1]);
+        let grid_y = clamp(world_height - Math.round(newPosition.y / unit), range_y[0], range_y[1]);
         // Update the text inputs to reflect new position
         if (this.name == "top_corner") {
             top_input_x.innerHTML = grid_x;
-            top_input_y.innerHTML = world_height - grid_y;
+            top_input_y.innerHTML = grid_y;
         } else {
             bottom_input_x.innerHTML = grid_x;
-            bottom_input_y.innerHTML = world_height - grid_y;
+            bottom_input_y.innerHTML = grid_y;
         }
         // Resize grid coord by size of unit to get new position
         this.x = grid_x * unit;
-        this.y = grid_y * unit;
+        this.y = (world_height - grid_y) * unit;
     }
     // Rescale and position filled rect of block to reflect new handle positions
     adjustBlock();

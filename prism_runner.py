@@ -10,7 +10,7 @@ ranges = [
     (0, 100), # person_x
     (0, 15),  # person_y
     (0, 100), # car_x
-    (0, 15),  # car_y
+    (5, 5),   # car_y
     (0, 100), # top_corner_x
     (0, 15),  # top_corner_y
     (0, 100), # bottom_corner_x
