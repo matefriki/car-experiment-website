@@ -228,7 +228,7 @@ body {
     animation-iteration-count: infinite;
 }
 
-.dropdown {
+.strat-dropdown {
     width: calc(100% - 16px);
     height: 40px;
     margin: 8px;

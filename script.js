@@ -3,6 +3,7 @@ let app, socket;
 let unit = 0;
 
 // References to text inputs
+let strat_dropdown;
 let car_input_x, car_input_y;
 let person_input_x, person_input_y;
 let top_input_x, top_input_y, bottom_input_x, bottom_input_y;
@@ -18,6 +19,9 @@ window.addEventListener('load', () => {
     // Create socket connection with server
     socket = io();
     socket.on("path", animatePath);
+
+    // Get reference to the strategy selection dropdown from html
+    strat_dropdown = document.body.querySelector(".strat-dropdown");
 
     // Get references to the car's inputs from html
     let car_inputs = document.body.querySelectorAll('.pane.car .input');
@@ -305,15 +309,15 @@ function setLoadingVisibility(visible) {
 
 // Enable or disable both html controls and draggable object in Pixi scene, depending on whether "active" is true or false
 function setControlsActive(active) {
-    // Hide the randomize buttons with fade animation
-    let randBtns = document.querySelectorAll('.random');
+    // Hide the randomize buttons and dropdowns with fade animation
+    let randBtns = document.body.querySelectorAll('.random, .dropdown-component');
     randBtns.forEach((rand) => {
         if (active) rand.classList.remove("hidden");
         else rand.classList.add("hidden");
     });
 
     // Disable editing of text inputs, though they remain visible
-    document.querySelectorAll('.controls .input').forEach((inp) => {
+    document.body.querySelectorAll('.controls .input').forEach((inp) => {
         inp.setAttribute("contenteditable", active ? "true" : "false");
         if (active) inp.classList.add("editable");
         else inp.classList.remove("editable");
@@ -334,7 +338,7 @@ function sendGenerateMessage() {
 
     let bottom_point = [Math.min(...x_values), Math.min(...y_values)].map((n) => n.toString());
     let top_point = [Math.max(...x_values), Math.max(...y_values)].map((n) => n.toString());
-    socket.emit('generate', path_length.innerText, person_input_x.innerText, person_input_y.innerText, car_input_x.innerText, car_input_y.innerText, top_point[0], top_point[1], bottom_point[0], bottom_point[1]);
+    socket.emit('generate', strat_dropdown.dataset.value, path_length.innerText, person_input_x.innerText, person_input_y.innerText, car_input_x.innerText, car_input_y.innerText, top_point[0], top_point[1], bottom_point[0], bottom_point[1]);
 }
 
 // Handle beginning of drag event

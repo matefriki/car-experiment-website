@@ -25,20 +25,20 @@ with open("config.txt", "r") as file:
 starting_state = [arg for arg in input().split(" ") if arg]
 
 # Ensure correct number of arguments
-if len(starting_state) != 9:
+if len(starting_state) != 10:
     sys.exit("Invalid input: incorrect number of args")
 
-# Ensure arguments aren't bigger than reasonable length (10)
-if any([len(arg) > 10 for arg in starting_state]):
+# Ensure numerical arguments aren't bigger than reasonable length (10)
+if any([len(arg) > 10 for arg in starting_state[1:]]):
     sys.exit("Invalid input: argument too big")
 
-# Ensure all arguments contain only valid characters (positive integers)
-if not all([num.isnumeric() for num in starting_state]):
+# Ensure all numerical arguments contain only valid characters (positive integers)
+if not all([num.isnumeric() for num in starting_state[1:]]):
     sys.exit("Invalid input: not all positive integers")
 
-# Parse arguments to integers
+# Parse numerical arguments to integers
 try:
-    starting_state = [int(n) for n in starting_state]
+    starting_state[1:] = [int(n) for n in starting_state[1:]]
 # Ensure all arguments parse correctly
 except Exception as e:
     sys.exit(f"Parse error: {e}")
@@ -46,12 +46,21 @@ except Exception as e:
 # Ensure arguments are within desired ranges
 def within_range(num, range):
     return num >= range[0] and num <= range[1]
-if not all([within_range(arg, ranges[i]) for i, arg in enumerate(starting_state)]):
+if not all([within_range(arg, ranges[i]) for i, arg in enumerate(starting_state[1:])]):
     sys.exit("Invalid input: argument out of range")
 
-path_length, person_x, person_y, car_x, car_y, top_corner_x, top_corner_y, bottom_corner_x, bottom_corner_y = starting_state
+strat_name, path_length, person_x, person_y, car_x, car_y, top_corner_x, top_corner_y, bottom_corner_x, bottom_corner_y = starting_state
 
-with open("template.pm", "r") as file:
+# Ensure strat_name is in list of available options
+strat_files = {
+    "cautious": "dtmc_cautious.pm",
+    "normal": "dtmc_normal.pm",
+    "agressive": "dtmc_agressive.pm"
+}
+if strat_name not in strat_files:
+    sys.exit("Invalid input: strategy does not exist")
+
+with open(strat_files[strat_name], "r") as file:
     template = file.read()
 
 program = template.format(person_x = person_x, person_y = person_y, car_x = car_x, car_y = car_y, top_corner_x = top_corner_x, top_corner_y = top_corner_y,  bottom_corner_x = bottom_corner_x, bottom_corner_y = bottom_corner_y)
