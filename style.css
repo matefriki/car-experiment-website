@@ -227,3 +227,9 @@ body {
     animation-direction: alternate-reverse;
     animation-iteration-count: infinite;
 }
+
+.dropdown {
+    width: calc(100% - 16px);
+    height: 40px;
+    margin: 8px;
+}
