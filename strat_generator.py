@@ -29,20 +29,19 @@ def make_mdp():
     with open("mdpgenerated.pm", "w") as f:
         f.write(replaced)
 
-def make_dtmc():
-    file = open(input("Model file to convert to template: "), "r")
+
+def make_dtmc(dict, temp):
+    file = open(temp, "r")    
     lines = [line.strip() for line in file.readlines()]
     file.close()
 
-    strats = open('strategy.json')
-    strategydict = json.load(strats)
-    strategy = strategydict['strategies']
-
-    acc = "accelerate"
-    brake = "brake"
-    nop = "nop"
-    actions = [acc, brake, nop]
-    
+    print(dict)
+    # print(inner)
+    # for key in dict:
+    #     print(f"key: {key}") # cautious, risky
+    #     print(f"dict[key]: {dict[key]}") # the list of acc, br, nop in each "key" = strategy type
+    # key = [key for key in dict]
+    # change file type from mdp to dtmc
     for i, line in enumerate(lines):
         lines[i] = re.sub("mdp", "dtmc", lines[i])
         label_match = label_reg.search(line)
@@ -52,17 +51,25 @@ def make_dtmc():
             label = label_match.group(1)
             lines[i] = line[:start_ind] + " {{{}}};".format(label)
         strat_match = strategies_label.search(line)
-        
         if strat_match:
-            for strat in strategy:
-                for j, nothing in enumerate(strat):
-                    if actions[j] == strat_name_label.search(strat_match.group(0)).group(0):
-                        lines[i] = re.sub(strat_regex, f"[] {strat[actions[j]]}  & ", lines[i]) 
-
+            for key in dict:
+               
+                # print(f"i: {key}")
+                # print(f"dict: {dict}")
+                # if strat_match.group(0) == key:
+                if strat_match.group(0) == key: 
+                    print(f"dict[key]: {dict[key]}")
+                    lines[i] = re.sub(strat_regex, f"[] {dict[key]}  & ", lines[i]) 
+            
     replaced = '\n'.join(lines)
-    with open("dtmcgenerated.pm", "w") as f:
+    with open(f"dtmc{strat}.pm", "w") as f:
         f.write(replaced)
 
 
-make_mdp()
-make_dtmc()
+
+# # make_mdp()
+strats = open('strategy.json')
+strategy = json.load(strats)
+for strat in strategy:
+# for i in range(1):
+    make_dtmc(strategy[strat], "test.pm")
