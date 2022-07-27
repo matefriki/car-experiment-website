@@ -475,8 +475,9 @@ function displayGraph(graph) {
     img.addEventListener("load", () => {
         var ctx = canvas.getContext("2d");
         let ratio = 25 / 35;
-        canvas.width = 1000;
-        canvas.height = 1000 * ratio;
+        let width = 1000;
+        canvas.width = width;
+        canvas.height = width * ratio;
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     });
     container.style.display = "inline-block";
