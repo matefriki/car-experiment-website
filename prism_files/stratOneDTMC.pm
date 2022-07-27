@@ -43,7 +43,7 @@ label "blocked_vis" = (dist_ped >= min(dist_s1, dist_s2, dist_s3, dist_s4));
 
 formula dist = max(ped_x-car_x, car_x - ped_x) + max(ped_y - car_y, car_y - ped_y);	
 formula safe_dist = dist > 15;
-formula is_on_sidewalk = (ped_y < sidewalk_height) | (ped_y > sidewalk_height + crosswalk_height);
+formula is_on_sidewalk = (ped_y <= sidewalk_height) | (ped_y >= sidewalk_height + crosswalk_height);
 formula wait_prob = (crosswalk_pos - ped_x) / 10;
 
 // for calculating if pedestrian is blocked from car view
@@ -134,7 +134,8 @@ module Car
 					)
 				)
 			)
-		) | (
+		)
+		| (
 			(seen_ped = 0) & (visibility = 0)
 		)
 	) -> // Accelerate
@@ -193,9 +194,10 @@ module Car
 					)
 				)
 			)
-		) | (
-			(seen_ped = 0) & (visibility = 0)
 		)
+		//| (
+		//	(seen_ped = 0) & (visibility = 0)
+		//)
 	)-> // Brake
 	// change probabilities based on type of driver and/or environment
 	0.45: (car_v' = max(0, car_v - 2))&(car_x' = min(street_length, car_x + max(0, car_v - 2)))&(turn' = 1) + 
@@ -223,7 +225,7 @@ module Car
 						car_v = 2
 					)
 				) | (
-					!is_on_sidewalk & (car_x > ped_x)
+					!is_on_sidewalk & (car_x >= ped_x)
 				)
 			)
 		) | (
@@ -237,12 +239,12 @@ module Car
 						car_v = 2
 					)
 				) | (
-					!is_on_sidewalk & (car_x > block_x2)
+					!is_on_sidewalk & (car_x >= block_x2)
 				)
 			)
-		) | (
-			(seen_ped = 0) & (visibility = 0)
-		)
+		) //| (
+		//	(seen_ped = 0) & (visibility = 0)
+		//)
 	) -> // Stays the same speed
 	0.94: (car_x' = min(street_length, car_x + max(0, car_v)))&(turn' = 1) +
 	0.03: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 1) +  // brakes
@@ -268,7 +270,7 @@ module Pedestrian
 		0.9: (ped_x' = min(ped_x + 1, street_length))&(turn' = 0) + // Right
 		0.08: (ped_x' = max(ped_x - 1, 0))&(turn' = 0) + // Left
 		0.02: (ped_y' = min(ped_y + 1, world_height))&(turn' = 0); // Up
-	[] (turn = 2)&(is_on_sidewalk)&(ped_x > (crosswalk_pos + crosswalk_width)) ->
+	[] (turn = 2)&(is_on_sidewalk)&(ped_x >= (crosswalk_pos + crosswalk_width)) ->
 		0.9: (ped_x' = max(ped_x - 1, 0))&(turn' = 0) + // Left
 		0.08: (ped_x' = min(ped_x + 1, street_length))&(turn' = 0) + // Right
 		0.02: (ped_y' = min(ped_y + 1, world_height))&(turn' = 0); // Up
@@ -276,7 +278,7 @@ module Pedestrian
 // conditions for ped to start crossing the street
 	// 2.a 40% probability of crossing street when at the crosswalk
 	// 30% chance of walking left or right is it doesn't cross the street
-	[] (turn = 2)&(!ped_vis | !car_fast)&(ped_x > crosswalk_pos)&(ped_x < (crosswalk_pos + crosswalk_width)) ->
+	[] (turn = 2)&(!ped_vis | !car_fast)&(ped_x >= crosswalk_pos)&(ped_x <= (crosswalk_pos + crosswalk_width)) ->
 		0.4: (ped_y' = min(ped_y + 1, world_height))&(turn' = 0) + // Up
 		0.3: (ped_x' = max(ped_x - 1, 0))&(turn' = 0) + // Left
 		0.3: (ped_x' = min(ped_x + 1, street_length))&(turn' = 0); // Right
@@ -284,7 +286,7 @@ module Pedestrian
 	// 2.b 10% chance of crossing the street given the ped can see the car and is a certain distance away from the car
 	// and is at the crosswalk
 	// 90% chance of doing other things
-	[] (turn = 2)&(ped_vis)&(car_fast)&(ped_x > crosswalk_pos)&(ped_x < (crosswalk_pos + crosswalk_width)) ->
+	[] (turn = 2)&(ped_vis)&(car_fast)&(ped_x >= crosswalk_pos)&(ped_x <= (crosswalk_pos + crosswalk_width)) ->
 		0.1: (ped_y' = min(ped_y + 1, world_height))&(turn' = 0) + // Up
 		0.45: (ped_x' = max(ped_x - 1, 0))&(turn' = 0) + // Left
 		0.45: (ped_x' = min(ped_x + 1, street_length))&(turn' = 0); // Right
