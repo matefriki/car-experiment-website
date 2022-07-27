@@ -55,6 +55,17 @@ formula y1 = car_y;
 formula x2 = ped_x;
 formula y2 = ped_y;
 
+formula dist_ped = ((x2 - x1)*(x2 - x1)) + ((y2 - y1)*(y2 - y1));
+
+// block dist to ped
+formula b1 = block_x2 - block_x1;
+formula b2 = block_y2 - block_y1;
+
+formula ped_to_block = ((x2 - b1)*(x2 - b1)) + ((y2 - b2)*(y2 - b2));
+formula car_to_block = ((x1 - b1)*(x1 - b1)) + ((y1 - b2)*(y1 - b2));
+
+formula vis_blocked = car_to_block > ped_to_block;
+
 formula int_s1 = (((y2 -  y1)/(x2 - x1))*(block_x1 - x1) + y1); // x = block_x1
 formula int_s2 = (((x2 - x1)/(y2 - y1))*(block_y2 - y1) + x1); // y = block_y2
 formula int_s3 = (((y2 -  y1)/(x2 - x1))*(block_x2 - x1) + y1); // x = block_x2
@@ -67,11 +78,10 @@ formula s3 = (int_s3 > block_y1) & (int_s3 < block_y2); // (block_x2, int_s3)
 formula s4 = (int_s4 > block_x1) & (int_s4 < block_x2); // (int_s4, block_y1)
 
 // distance formulas for car to pedestrian and each intersection (above)
-formula dist_ped = ((x2 - x1)*(x2 - x1)) + ((y2 - y1)*(y2 - y1));
 formula dist_s1 =  s1 ? ((block_x1 - x1)*(block_x1 - x1)) + ((int_s1 - y1)*(int_s1 - y1)) : max_dist;
 formula dist_s2 = s2 ? ((int_s2 - x1)*(int_s2 - x1)) + ((block_y2 - y1)*(block_y2 - y2)) : max_dist;
 formula dist_s3 = s3 ? ((block_x2 - x1)*(block_x2 - x1)) + ((int_s3 - y1)*(int_s3 - y1)) : max_dist;
-formula dist_s4 = s4 ? ((int_s4 - x1)*(int_s4 - x1)) + ((int_s4 - y1)*(int_s4 - y1)) : max_dist;
+formula dist_s4 = s4 ? ((int_s4 - x1)*(int_s4 - x1)) + ((block_y1 - y1)*(block_y1 - y1)) : max_dist;
 
 formula car_fast = (dist_ped <= ((car_v*car_v) + car_v)/2);
 formula ped_vis = (dist_ped < min(dist_s1, dist_s2, dist_s3, dist_s4));
@@ -108,9 +118,9 @@ module Car
 
 
 	// changes the visibility variable so we know when the car is able/unable to see ped
-	[] (turn = 1)&(ped_vis) ->
+	[] (turn = 1)&(ped_vis)|((!ped_vis)&(!vis_blocked)) ->
 	(visibility' = 1)&(turn' = 2);
-	[] (turn = 1)&(!ped_vis) ->
+	[] (turn = 1)&(!ped_vis)&(vis_blocked) ->
 	(visibility' = 0)&(turn' = 2);
 	 
 	 
