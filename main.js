@@ -51,6 +51,16 @@ io.on('connection', (socket) => {
         console.log('close');
         closed();
       });
+
+      // Send graph placeholder
+      fs.readFile('graph.png', (err, data) => {
+        if(err) {
+          console.error(err);
+          return;
+        }
+
+        socket.emit("graph", data);
+      });
     });
 
     handleQueue();

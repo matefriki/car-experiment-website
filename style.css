@@ -9,17 +9,15 @@ html, body {
 
 body {
     margin: 0;
-    display: flex;
-    flex-direction: column;
     justify-content: center;
     background: black;
     font-family: Barlow;
 }
 
 .controls {
-    flex-grow: .4;
     display: flex;
     flex-direction: column;
+    align-items: stretch;
 }
 
 .controls > .outline {
@@ -37,19 +35,90 @@ body {
     user-select: none; /* Standard */
 }
 
-.bottom {
-    flex-grow: 1;
-}
-
 .scene {
     width: 100vw;
     height: 15vw;
     background: #CCC;
 }
 
+.bottom {
+    width: 100%;
+    display: inline-block;
+}
+
+.graph-container {
+    width: 35vw;
+    height: 25vw;
+    background: green;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    margin: 1vw 0px;
+    border: 5px solid #3498db;
+    animation: graph-show .4s;
+    display: none;
+}
+
+.graph {
+    width: 100%;
+    height: 100%;
+}
+
+.graph-container > .overlay {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 100%;
+    height: 100%;
+    opacity: 0.0;
+    background: black;
+    display: inline-block;
+    animation: graph-fade .8s;
+    margin-bottom: -100%;
+}
+
+@keyframes graph-show {
+    0% {
+        width: 0vw;
+        opacity: 0.0;
+        height: 2vw;
+    }
+
+    60% {
+        width: 40vw;
+        opacity: 1.0;
+        height: 2vw;
+    }
+
+    70% {
+        width: 35vw;
+        opacity: 1.0;
+        height: 2vw;
+    }
+
+    100% {
+        width: 35vw;
+        opacity: 1.0;
+        height: 25vw;
+    }
+}
+
+@keyframes graph-fade {
+    0% {
+        opacity: 1.0;
+    }
+
+    50% {
+        opacity: 1.0;
+    }
+
+    100% {
+        opacity: 0.0;
+    }
+}
+
 .pane {
     width: 200px;
-    height: 100%;
     border-right: 5px solid #3498db;
 }
 
@@ -140,11 +209,6 @@ body {
 
 .editable:hover {
     background: #222;
-}
-
-.graph {
-    flex-grow: 1;
-    width: 100%;
 }
 
 .generate {

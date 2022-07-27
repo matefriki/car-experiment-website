@@ -19,6 +19,7 @@ window.addEventListener('load', () => {
     // Create socket connection with server
     socket = io();
     socket.on("path", animatePath);
+    socket.on("graph", displayGraph);
 
     // Get reference to the strategy selection dropdown from html
     strat_dropdown = document.body.querySelector(".strat-dropdown");
@@ -461,4 +462,24 @@ function animatePath(path) {
         }
     });
     ticker.start();
+}
+
+// Display the generated graph at the bottom of the page
+function displayGraph(graph) {
+    let blob = new Blob([graph],{type:'image/png'});
+    let url = URL.createObjectURL(blob);
+    var img = new Image();
+
+    let canvas = document.body.querySelector(".graph");
+    let container = document.body.querySelector(".graph-container");
+    img.addEventListener("load", () => {
+        var ctx = canvas.getContext("2d");
+        let ratio = 25 / 35;
+        canvas.width = 1000;
+        canvas.height = 1000 * ratio;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    });
+    container.style.display = "inline-block";
+
+    img.src = url;
 }
