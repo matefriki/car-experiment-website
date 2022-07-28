@@ -53,8 +53,8 @@ body {
     position: relative;
     left: 50%;
     transform: translateX(-50%);
-    margin: 1vw 0px;
-    border: 5px solid #3498db;
+    margin: 2vw 0px;
+    outline: 5px solid #3498db;
     animation: graph-show .4s;
     display: none;
 }
@@ -187,8 +187,8 @@ body {
 }
 
 .hidden {
-    animation: hide .2s;
-    animation-fill-mode: forwards;
+    animation: hide .2s !important;
+    animation-fill-mode: forwards !important;
 }
 
 @keyframes full_hide {
@@ -203,8 +203,8 @@ body {
 }
 
 .fully_hidden {
-    animation: full_hide .2s;
-    animation-fill-mode: forwards;
+    animation: full_hide .2s !important;
+    animation-fill-mode: forwards !important;
 }
 
 .editable:hover {
@@ -296,4 +296,39 @@ body {
     width: calc(100% - 16px);
     height: 40px;
     margin: 8px;
+}
+
+.spinner {
+    width: 4vw;
+    height: 4vw;
+    position: relative;
+    left: calc(50% - 2vw);
+    margin-top: 1vw;
+    animation: spinner-pop .4s linear, spinner-spin .8s infinite linear;
+    animation-delay: 0s, .4s;
+    display: none;
+}
+
+@keyframes spinner-pop {
+    0% {
+        transform: scale(0) rotate(0deg);
+    }
+
+    50% {
+        transform: scale(1.2) rotate(90deg);
+    }
+
+    100% {
+        transform: scale(1) rotate(180deg);
+    }
+}
+
+@keyframes spinner-spin {
+    from {
+        transform: rotate(180deg);
+    }
+
+    to {
+        transform: rotate(540deg);
+    }
 }

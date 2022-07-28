@@ -3,6 +3,7 @@ let app, socket;
 let unit = 0;
 
 // References to text inputs
+let spinner;
 let strat_dropdown;
 let car_input_x, car_input_y;
 let person_input_x, person_input_y;
@@ -23,6 +24,9 @@ window.addEventListener('load', () => {
 
     // Get reference to the strategy selection dropdown from html
     strat_dropdown = document.body.querySelector(".strat-dropdown");
+
+    // Get reference to the graph spinner
+    spinner = document.body.querySelector(".spinner");
 
     // Get references to the car's inputs from html
     let car_inputs = document.body.querySelectorAll('.pane.car .input');
@@ -148,6 +152,9 @@ window.addEventListener('load', () => {
         let generatePane = document.querySelector('.generate');
         generatePane.style.display = "none";
         setLoadingVisibility(true);
+
+        // Show the graph spinner
+        setSpinnerVisibility(true);
 
         // Deactivate the UI controls
         setControlsActive(false);
@@ -306,6 +313,12 @@ function setLoadingVisibility(visible) {
         loadingPane.style.display = "flex";
     }
     else loadingPane.classList.add("fully_hidden");
+}
+
+// Makes the graph spinner either visible or fade away depending on the given boolean
+function setSpinnerVisibility(visible) {
+    if(visible) spinner.style.display = "inline-block";
+    else spinner.style.display = "none";
 }
 
 // Enable or disable both html controls and draggable object in Pixi scene, depending on whether "active" is true or false
@@ -480,6 +493,8 @@ function displayGraph(graph) {
         canvas.height = width * ratio;
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     });
+
+    setSpinnerVisibility(false);
     container.style.display = "inline-block";
 
     img.src = url;

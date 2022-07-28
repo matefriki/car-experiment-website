@@ -21,7 +21,7 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
-let accessible_files = ["dropdown.js", "dropdown.css", "script.js", "style.css", "person.png", "car.png", "scene.png", "handle.png", "socket.io/socket.io.js", "fonts/Barlow-SemiBold.ttf"];
+let accessible_files = ["spin.png", "dropdown.js", "dropdown.css", "script.js", "style.css", "person.png", "car.png", "scene.png", "handle.png", "socket.io/socket.io.js", "fonts/Barlow-SemiBold.ttf"];
 accessible_files.map((file_name) => {
   app.get(`/${file_name}`, (req, res) => {
     res.sendFile(__dirname + `/${file_name}`);
@@ -59,7 +59,7 @@ io.on('connection', (socket) => {
           return;
         }
 
-        socket.emit("graph", data);
+        setTimeout(() => socket.emit("graph", data), 2000);
       });
     });
 
