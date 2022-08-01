@@ -25,7 +25,7 @@ with open("config.txt", "r") as file:
 starting_state = [arg for arg in input().split(" ") if arg]
 
 # Ensure correct number of arguments
-if len(starting_state) != 9:
+if len(starting_state) != len(ranges):
     sys.exit("Invalid input: incorrect number of args")
 
 # Ensure arguments aren't bigger than reasonable length (10)
