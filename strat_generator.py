@@ -30,12 +30,16 @@ def make_mdp(temp):
         f.write(replaced)
 
 # generates DTMC files for a dictionary and file input
-def make_dtmc(dict, temp):
+def make_dtmc(temp):
+    strats = open('strategy.json')
+    strategy = json.load(strats)
+
+
+
     file = open(temp, "r")    
     lines = [line.strip() for line in file.readlines()]
     file.close()
-
-  
+    
     for i, line in enumerate(lines):
         # change file type from mdp to dtmc
         lines[i] = re.sub("mdp", "dtmc", lines[i])
@@ -48,29 +52,32 @@ def make_dtmc(dict, temp):
         # finds strategy labels in PRISM file "[accelerate]..." and adds in corresponding guard
         strat_match = strategies_label.search(line)
         if strat_match:
-            for key in dict:
-                if strat_match.group(0) == key: 
-                    print(f"dict[key]: {dict[key]}")
-                    lines[i] = re.sub(strat_regex, f"[] {dict[key]}  & ", lines[i]) 
+            for strat in strategy:
+                for key in strategy[strat]:
+                    if strat_match.group(0) == key: 
+                        print(f"dict[key]: {strategy[strat][key]}")
+                        lines[i] = re.sub(strat_regex, f"[] {strategy[strat][key]}  & ", lines[i]) 
     # rewrites lines into new files
     replaced = '\n'.join(lines)
-    with open(f"dtmc{strat}.pm", "w") as f:
-        f.write(replaced)
+
+    for strat in strategy:
+        with open(f"dtmc{strat}.pm", "w") as f:
+            f.write(replaced)
 
 
 def main():
-    strats = open('strategy.json')
-    strategy = json.load(strats)
+   
 
     # change this to final PRISM file
-    prism_file = "prism_files/test.pm"
+    prism_file = "prism_files/joint_cx.pm"
 
     # makes ones mdp file
     make_mdp(prism_file)
+    make_dtmc(prism_file)
 
     # makes one dtmc file per strategy listed in the json file
-    for strat in strategy:
-        make_dtmc(strategy[strat], prism_file)
+    # for strat in strategy:
+    #     make_dtmc(strategy[strat], prism_file)
 
 if __name__ == '__main__':
     main()
