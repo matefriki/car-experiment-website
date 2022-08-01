@@ -1,5 +1,6 @@
 {
     "cautious": {
+<<<<<<< HEAD
         "accelerate": "(is_on_sidewalk) & (((car_x - crosswalk_pos) > (2*car_v)) | (((car_x - crosswalk_pos) <= (2*car_v)) & (car_v < 2)))",
         "brake": "(((car_x - crosswalk_pos) <= (2*car_v)) & (car_v > 2)) | (!is_on_sidewalk & (car_x < ped_x))",
         "nop": "(((car_x - crosswalk_pos) <= (2*car_v)) & (car_v = 2)) | (!is_on_sidewalk & (car_x > ped_x))"
@@ -8,5 +9,15 @@
         "accelerate": "test acc",
         "brake": "test break",
         "nop": "test nop"
+=======
+        "[accelerate]": "(is_on_sidewalk) & (((car_x - crosswalk_pos) > (2*car_v)) | (((car_x - crosswalk_pos) <= (2*car_v)) & (car_v < 2)))",
+        "[brake]": "(((car_x - crosswalk_pos) <= (2*car_v)) & (car_v > 2)) | (!is_on_sidewalk & (car_x < ped_x))",
+        "[nop]": "(((car_x - crosswalk_pos) <= (2*car_v)) & (car_v = 2)) | (!is_on_sidewalk & (car_x > ped_x))"
+    },
+    "risky": {
+        "[accelerate]": "test acc",
+        "[brake]": "test break",
+        "[nop]": "test nop"
+>>>>>>> 3f8c2f7f84de275d75592e6d99bae1b8f181723b
     }
 }
