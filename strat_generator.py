@@ -34,8 +34,6 @@ def make_dtmc(temp):
     strats = open('strategy.json')
     strategy = json.load(strats)
 
-
-
     file = open(temp, "r")    
     lines = [line.strip() for line in file.readlines()]
     file.close()
@@ -69,7 +67,7 @@ def main():
    
 
     # change this to final PRISM file
-    prism_file = "prism_files/joint_cx.pm"
+    prism_file = input("Model file to convert to template: ")
 
     # makes ones mdp file
     make_mdp(prism_file)
