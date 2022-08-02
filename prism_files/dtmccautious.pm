@@ -30,6 +30,9 @@ const int car_height = 2;
 const int car_width = max_speed;
 const int car_y = 5;
 
+// pedestrian properties
+const int min_ped_x = 0;
+
 global turn : [0..2] init 0;
 
 // simple bubble of ped and car within a certain distance of each other
@@ -48,9 +51,18 @@ formula wait_prob = (crosswalk_pos - ped_x) / 10;
 
 // for calculating if pedestrian is blocked from car view
 formula x1 = car_x + car_width;
-formula y1 = car_y;
+formula y1 = car_y + car_height;
 formula x2 = ped_x;
 formula y2 = ped_y;
+
+formula dist_ped = ((x2 - x1)*(x2 - x1)) + ((y2 - y1)*(y2 - y1));
+
+// block dist to ped
+formula b1 = block_x2 - block_x1;
+formula b2 = block_y2 - block_y1;
+
+formula ped_to_block = ((x2 - b1)*(x2 - b1)) + ((y2 - b2)*(y2 - b2));
+formula car_to_block = ((x1 - b1)*(x1 - b1)) + ((y1 - b2)*(y1 - b2));
 
 formula int_s1 = (((y2 -  y1)/(x2 - x1))*(block_x1 - x1) + y1); // x = block_x1
 formula int_s2 = (((x2 - x1)/(y2 - y1))*(block_y2 - y1) + x1); // y = block_y2
@@ -64,7 +76,6 @@ formula s3 = (int_s3 > block_y1) & (int_s3 < block_y2); // (block_x2, int_s3)
 formula s4 = (int_s4 > block_x1) & (int_s4 < block_x2); // (int_s4, block_y1)
 
 // distance formulas for car to pedestrian and each intersection (above)
-formula dist_ped = ((x2 - x1)*(x2 - x1)) + ((y2 - y1)*(y2 - y1));
 formula dist_s1 =  s1 ? ((block_x1 - x1)*(block_x1 - x1)) + ((int_s1 - y1)*(int_s1 - y1)) : max_dist;
 formula dist_s2 = s2 ? ((int_s2 - x1)*(int_s2 - x1)) + ((block_y2 - y1)*(block_y2 - y2)) : max_dist;
 formula dist_s3 = s3 ? ((block_x2 - x1)*(block_x2 - x1)) + ((int_s3 - y1)*(int_s3 - y1)) : max_dist;
@@ -73,18 +84,29 @@ formula dist_s4 = s4 ? ((int_s4 - x1)*(int_s4 - x1)) + ((int_s4 - y1)*(int_s4 - 
 formula car_fast = (dist_ped <= ((car_v*car_v) + car_v)/2);
 formula ped_vis = (dist_ped < min(dist_s1, dist_s2, dist_s3, dist_s4));
 
+formula intersection = (s1 | s2 | s3 | s4);
+
+formula betweencb = (ped_to_block < car_to_block) & (ped_vis);
+
+formula vis_is_blocked = (intersection)&(dist_ped > ped_to_block)&(dist_ped > car_to_block);
+formula vis_not_blocked = (intersection)&(dist_ped < ped_to_block)&(car_to_block < ped_to_block);
+
+
 module Car
-	car_x : [0..street_length] init 0; // {car_x}
-	car_v : [0..max_speed] init 0; // {car_v}
+	car_x : [0..street_length] init 5; //{car_x};
+	car_v : [0..max_speed] init 0;
+	//car_y : [0..world_height] init 5; //{car_y};
 	visibility : [0..1] init 0;
 	finished : [0..1] init 0;
 	seen_ped : [0..1] init 0;
 
-	// changes the visibility variable so we know when the car is able/unable to see ped
-	[] (turn = 0)&(ped_vis) ->
-	(visibility' = 1)&(seen_ped' = 1)&(turn' = 2);
-	[] (turn = 0)&(!ped_vis) ->
-	(visibility' = 0)&(turn' = 2);
+
+    // changes the visibility variable so we know when the car is able/unable to see ped
+    [] (turn = 0)&(!intersection) -> //(betweencb)
+    (visibility' = 1)&(seen_ped' = 1)&(turn' = 1);
+    [] (turn = 0)&(intersection) -> //!betweencb)) 
+    (visibility' = 0)&(turn' = 1);
+
 	 
 	[] (
 		turn = 1
@@ -140,10 +162,10 @@ module Car
 		)
 	) -> // Accelerate
 	// change probabilities based on type of driver and/or environment
-	0.45: (car_v' = min(max_speed, car_v + 2))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 2)))&(turn' = 1) +
-	0.45: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 1) +
-	0.09: (car_x' = min(street_length, car_x + car_v + 0))&(turn' = 1)+
-	0.01: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 1);
+	0.45: (car_v' = min(max_speed, car_v + 2))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 2)))&(turn' = 2) +
+	0.45: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 2) +
+	0.09: (car_x' = min(street_length, car_x + car_v + 0))&(turn' = 2) +
+	0.01: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 2);
 
 	[] (
 		turn = 1
@@ -195,15 +217,12 @@ module Car
 				)
 			)
 		)
-		//| (
-		//	(seen_ped = 0) & (visibility = 0)
-		//)
 	)-> // Brake
 	// change probabilities based on type of driver and/or environment
-	0.45: (car_v' = max(0, car_v - 2))&(car_x' = min(street_length, car_x + max(0, car_v - 2)))&(turn' = 1) + 
-	0.45: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 1) +
-	0.09: (car_x' = min(street_length, car_x + car_v + 0))&(turn' = 1) +
-	0.01: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 1);
+	0.45: (car_v' = max(0, car_v - 2))&(car_x' = min(street_length, car_x + max(0, car_v - 2)))&(turn' = 2) + 
+	0.45: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 2) +
+	0.09: (car_x' = min(street_length, car_x + car_v + 0))&(turn' = 2) +
+	0.01: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 2);
 
 	[] (
 		turn = 1
@@ -242,13 +261,11 @@ module Car
 					!is_on_sidewalk & (car_x >= block_x2)
 				)
 			)
-		) //| (
-		//	(seen_ped = 0) & (visibility = 0)
-		//)
+		)
 	) -> // Stays the same speed
-	0.94: (car_x' = min(street_length, car_x + max(0, car_v)))&(turn' = 1) +
-	0.03: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 1) +  // brakes
-	0.03: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 1); //accelerates
+	0.94: (car_x' = min(street_length, car_x + max(0, car_v)))&(turn' = 2) +
+	0.03: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 2) +  // brakes
+	0.03: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 2); //accelerates
 
 	[] (turn = 1) & (finished = 0) & (car_x = street_length) -> (finished'=1);
 	[] (turn = 1) & (finished = 0) & (crash) -> (finished'=1);
@@ -257,7 +274,7 @@ module Car
 endmodule
 
 module Pedestrian
-	ped_x : [0..street_length] init (crosswalk_pos + 5); // {person_x}
+	ped_x : [min_ped_x..street_length] init (crosswalk_pos + 5); // {person_x}
 	ped_y : [0..world_height] init 0; // {person_y}
 
   // assumptions:
@@ -278,7 +295,7 @@ module Pedestrian
 // conditions for ped to start crossing the street
 	// 2.a 40% probability of crossing street when at the crosswalk
 	// 30% chance of walking left or right is it doesn't cross the street
-	[] (turn = 2)&(!ped_vis | !car_fast)&(ped_x >= crosswalk_pos)&(ped_x <= (crosswalk_pos + crosswalk_width)) ->
+	[] (turn = 2)&(!ped_vis | !car_fast)&(ped_x >= crosswalk_pos)&(ped_x <= (crosswalk_pos + crosswalk_width))&(is_on_sidewalk) ->
 		0.4: (ped_y' = min(ped_y + 1, world_height))&(turn' = 0) + // Up
 		0.3: (ped_x' = max(ped_x - 1, 0))&(turn' = 0) + // Left
 		0.3: (ped_x' = min(ped_x + 1, street_length))&(turn' = 0); // Right
@@ -286,14 +303,14 @@ module Pedestrian
 	// 2.b 10% chance of crossing the street given the ped can see the car and is a certain distance away from the car
 	// and is at the crosswalk
 	// 90% chance of doing other things
-	[] (turn = 2)&(ped_vis)&(car_fast)&(ped_x >= crosswalk_pos)&(ped_x <= (crosswalk_pos + crosswalk_width)) ->
+	[] (turn = 2)&(ped_vis)&(car_fast)&(ped_x >= crosswalk_pos)&(ped_x <= (crosswalk_pos + crosswalk_width))&(is_on_sidewalk) ->
 		0.1: (ped_y' = min(ped_y + 1, world_height))&(turn' = 0) + // Up
 		0.45: (ped_x' = max(ped_x - 1, 0))&(turn' = 0) + // Left
 		0.45: (ped_x' = min(ped_x + 1, street_length))&(turn' = 0); // Right
 
 // if ped crossing, keep crossing
 	// 3.a condition for if pedestrian is crossing, then ...keep crossing, etx
-	[] (turn = 2)&(ped_y > sidewalk_height) ->
+	[] (turn = 2)&(ped_y > sidewalk_height)&(!car_fast) ->
 		0.9: (ped_y' = min(ped_y + 1, world_height))&(turn' = 0) + // Up
 		0.08: (ped_y' = max(ped_y - 1, 0))&(turn' = 0) + // Down
 		0.01: (ped_x' = max(ped_x - 1, 0))&(turn' = 0) + // Left

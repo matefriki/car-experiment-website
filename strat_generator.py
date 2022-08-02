@@ -61,7 +61,7 @@ def make_dtmc(temp):
     replaced = '\n'.join(lines)
 
     for strat in strategy:
-        with open(f"dtmc{strat}.pm", "w") as f:
+        with open(f"dtmc_{strat}.pm", "w") as f:
             f.write(replaced)
 
 
