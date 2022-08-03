@@ -1,6 +1,5 @@
 from asyncio import base_tasks
-import os
-from os import system
+from os import system, getcwd
 from time import sleep
 import json
 import sys
@@ -98,6 +97,6 @@ system("python3 trace_convert.py")
 
 client = docker.from_env()
 
-client.containers.run("lposch/tempest-devel-traces:latest", "storm --prism program.pm --prop prism_files/dtmc_props.props --trace-input trace_input.txt --exportresult output --buildstateval", volumes = {os.getcwd(): {'bind': '/mnt/vol1', 'mode': 'rw'}}, working_dir = "/mnt/vol1", stderr = True)
+client.containers.run("lposch/tempest-devel-traces:latest", "storm --prism program.pm --prop prism_files/dtmc_props.props --trace-input trace_input.txt --exportresult output --buildstateval", volumes = {getcwd(): {'bind': '/mnt/vol1', 'mode': 'rw'}}, working_dir = "/mnt/vol1", stderr = True)
 # system("docker run --mount type=bind,source=\"$(pwd)\",target=/data -w /data/data --rm -it --name stormtrace lposch/tempest-devel-traces:latest")
 # system("storm --prism ../car-experiment-website/mdp.pm --prop ../car-experiment-website/prism_files/property.props --trace-input ../car-experiment-website/trace_input.txt --exportresult testing --buildstateval")
