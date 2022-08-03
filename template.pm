@@ -28,10 +28,10 @@ const int block_y2 = {top_corner_y};
 // car properties
 const int car_height = 2;
 const int car_width = max_speed;
-// const int car_y = 5;
+const int car_y = 5;
 
 // pedestrian properties
-const int min_ped_x = 50;
+const int min_ped_x = 0;
 
 global turn : [0..2] init 0;
 
@@ -39,7 +39,6 @@ global turn : [0..2] init 0;
 formula crash = ((ped_x >= car_x) & (ped_x <= car_x + car_width)) & ((ped_y >= car_y) & (ped_y <= car_y + car_height));
 
 label "crash" = crash;
-label "nocrash" = !crash;
 label "givereward" = ((finished=0) & (car_x = street_length));
 
 // checks distances of pedestrian to car and vis line intersections from the car to the block
@@ -94,76 +93,44 @@ formula betweencb = (ped_to_block < car_to_block) & (ped_vis);
 formula vis_is_blocked = (dist_ped > ped_to_block)&(dist_ped > car_to_block);
 formula vis_not_blocked = (dist_ped < ped_to_block)&(car_to_block < ped_to_block);
 
-formula car_fast = (dist_ped <= ((car_v*car_v) + car_v)/2);
-formula ped_vis = (dist_ped < min(dist_s1, dist_s2, dist_s3, dist_s4));
-
 module Car
 car_x : [0..street_length] init {car_x};
-<<<<<<< HEAD
-car_y : [0..world_height] init 5;
-car_v : [0..max_speed] init 1;
-visibility : [0..1] init 1;
-finished : [0..1] init 0;
-[] (turn = 0) & (finished=0) & (car_x < street_length) & (!crash) -> // Accelerate
-// change probabilities based on type of driver and/or environment
-0.5: (car_v' = min(max_speed, car_v + 2))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 2)))&(turn' = 1) +
-0.5: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 1);
-
-[] (turn = 0) & (finished=0) & (car_x < street_length) & (!crash) & (car_v > 0) -> // Brake
-// change probabilities based on type of driver and/or environment
-0.5: (car_v' = max(0, car_v - 2))&(car_x' = min(street_length, car_x + max(0, car_v - 2)))&(turn' = 1) +
-0.5: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 1);
-
-[] (turn = 0) & (finished=0) & (car_x < street_length) & (!crash) -> // Stays the same speed
-1: (car_x' = min(street_length, car_x + max(0, car_v)))&(turn' = 1);
-=======
 car_v : [0..max_speed] init 0;
-car_y : [0..world_height] init {car_y};
+// car_y : [0..world_height] init {car_y};
 visibility : [0..1] init 1;
 finished : [0..1] init 0;
+seen_ped : [0..1] init 0;
 
 // changes the visibility variable so we know when the car is able/unable to see ped
-[] (turn = 1)&((!intersection)|(intersection & (vis_not_blocked | betweencb))) ->
-(visibility' = 1)&(turn' = 2);
-[] (turn = 1)&(intersection & vis_is_blocked) ->
-(visibility' = 0)&(turn' = 2);
+[] (turn = 0)&(!intersection) ->
+(visibility' = 1)&(seen_ped' = 1)&(turn' = 1);
+[] (turn = 0)&(intersection) ->
+(visibility' = 0)&(turn' = 1);
 
-[] (turn = 0) & (finished=0) & (car_x < street_length) & (!crash) -> // Accelerate
+[] (turn = 1) & (finished=0) & (car_x < street_length) & (!crash) -> // Accelerate
 // change probabilities based on type of driver and/or environment
-0.45: (car_v' = min(max_speed, car_v + 2))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 2)))&(turn' = 1) +
-0.45: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 1) +
-0.09: (car_x' = min(street_length, car_x + car_v + 0))&(turn' = 1)+
-0.01: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 1);
+0.45: (car_v' = min(max_speed, car_v + 2))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 2)))&(turn' = 2) +
+0.45: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 2) +
+0.09: (car_x' = min(street_length, car_x + car_v + 0))&(turn' = 2) +
+0.01: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 2);
 
-[] (turn = 0) & (finished=0) & (car_x < street_length) & (!crash) & (car_v > 0) -> // Brake
+[] (turn = 1) & (finished=0) & (car_x < street_length) & (!crash) -> //& (car_v > 0) -> // Brake
 // change probabilities based on type of driver and/or environment
-0.45: (car_v' = max(0, car_v - 2))&(car_x' = min(street_length, car_x + max(0, car_v - 2)))&(turn' = 1) +
-0.45: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 1) +
-0.09: (car_x' = min(street_length, car_x + car_v + 0))&(turn' = 1) +
-0.01: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 1);
+0.45: (car_v' = max(0, car_v - 2))&(car_x' = min(street_length, car_x + max(0, car_v - 2)))&(turn' = 2) +
+0.45: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 2) +
+0.09: (car_x' = min(street_length, car_x + car_v + 0))&(turn' = 2) +
+0.01: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 2);
 
 // aggressive car -> would accelerate randomly more likely (0.03) than it would brake (0.02)
-[] (turn = 0) & (finished=0) & (car_x < street_length) & (!crash) -> // Stays the same speed
-0.95: (car_x' = min(street_length, car_x + max(0, car_v)))&(turn' = 1) +
-0.02: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 1) +  //breaks
-0.03: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 1); //accelerates
->>>>>>> ecc52e5337b912c662f14054923cc6c04c7eac51
+[] (turn = 1) & (finished=0) & (car_x < street_length) & (!crash) -> // Stays the same speed
+0.95: (car_x' = min(street_length, car_x + max(0, car_v)))&(turn' = 2) +
+0.02: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 2) +  //breaks
+0.03: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 2); //accelerates
 
-[] (turn = 0) & (finished = 0) & (car_x = street_length) -> (finished'=1);
-[] (turn = 0) & (finished = 0) & (crash) -> (finished'=1);
-[] (turn=0) & (finished = 1) -> true;
+[] (turn = 1) & (finished = 0) & (car_x = street_length) -> (finished'=1);
+[] (turn = 1) & (finished = 0) & (crash) -> (finished'=1);
+[] (turn = 1) & (finished = 1) -> true;
 
-<<<<<<< HEAD
-// changes the visibility variable so we know when the car is able/unable to see ped
-[] (turn = 1)&(ped_vis) ->
-(visibility' = 1)&(turn' = 2);
-[] (turn = 1)&(!ped_vis) ->
-(visibility' = 0)&(turn' = 2);
-=======
-
-
-
->>>>>>> ecc52e5337b912c662f14054923cc6c04c7eac51
 
 endmodule
 
@@ -177,15 +144,7 @@ ped_y : [0..world_height] init {person_y};
 
 // 1. made two options, assuming the pedestrian is wanting to walk toward the crosswalk
 // with the goal of crossing the street (forward = walk toward cross walk)
-<<<<<<< HEAD
 [] (turn = 2)&(is_on_sidewalk)&(ped_x < crosswalk_pos) ->
-0.9: (ped_x' = min(ped_x + 1, street_length))&(turn' = 0) + // Right
-0.1: (ped_x' = max(ped_x - 1, min_ped_x))&(turn' = 0); // Left
-[] (turn = 2)&(is_on_sidewalk)&(ped_x > (crosswalk_pos + crosswalk_width)) ->
-0.9: (ped_x' = max(ped_x - 1, min_ped_x))&(turn' = 0) + // Left
-0.1: (ped_x' = min(ped_x + 1, street_length))&(turn' = 0); // Right
-=======
-[] (turn = 2)&(is_on_sidewalk)&(ped_x <= crosswalk_pos) ->
 0.9: (ped_x' = min(ped_x + 1, street_length))&(turn' = 0) + // Right
 0.08: (ped_x' = max(ped_x - 1, min_ped_x))&(turn' = 0) + // Left
 0.02: (ped_y' = min(ped_y + 1, world_height))&(turn' = 0); // Up
@@ -193,16 +152,11 @@ ped_y : [0..world_height] init {person_y};
 0.9: (ped_x' = max(ped_x - 1, min_ped_x))&(turn' = 0) + // Left
 0.08: (ped_x' = min(ped_x + 1, street_length))&(turn' = 0) + // Right
 0.02: (ped_y' = min(ped_y + 1, world_height))&(turn' = 0); // Up
->>>>>>> ecc52e5337b912c662f14054923cc6c04c7eac51
 
 // conditions for ped to start crossing the street
 // 2.a 40% probability of crossing street when at the crosswalk
 // 30% chance of walking left or right is it doesn't cross the street
-<<<<<<< HEAD
-[] (turn = 2)&(!ped_vis | !car_fast)&(ped_x > crosswalk_pos)&(ped_x < (crosswalk_pos + crosswalk_width)) ->
-=======
-[] (turn = 2)&(!ped_vis | !car_fast)&(ped_x >= crosswalk_pos)&(ped_x <= (crosswalk_pos + crosswalk_width)) ->
->>>>>>> ecc52e5337b912c662f14054923cc6c04c7eac51
+[] (turn = 2)&(!ped_vis)&(ped_x >= crosswalk_pos)&(ped_x <= (crosswalk_pos + crosswalk_width))&(is_on_sidewalk) -> // !car_fast)&
 0.4: (ped_y' = min(ped_y + 1, world_height))&(turn' = 0) + // Up
 0.3: (ped_x' = max(ped_x - 1, min_ped_x))&(turn' = 0) + // Left
 0.3: (ped_x' = min(ped_x + 1, street_length))&(turn' = 0); // Right
@@ -210,31 +164,14 @@ ped_y : [0..world_height] init {person_y};
 // 2.b 10% chance of crossing the street given the ped can see the car and is a certain distance away from the car
 // and is at the crosswalk
 // 90% chance of doing other things
-<<<<<<< HEAD
-[] (turn = 2)&(ped_vis)&(car_fast)&(ped_x > crosswalk_pos)&(ped_x < (crosswalk_pos + crosswalk_width)) ->
-=======
-[] (turn = 2)&(ped_vis)&(car_fast)&(ped_x >= crosswalk_pos)&(ped_x <= (crosswalk_pos + crosswalk_width)) ->
->>>>>>> ecc52e5337b912c662f14054923cc6c04c7eac51
+[] (turn = 2)&(ped_vis)&(ped_x >= crosswalk_pos)&(ped_x <= (crosswalk_pos + crosswalk_width))&(is_on_sidewalk) -> //(car_fast)
 0.1: (ped_y' = min(ped_y + 1, world_height))&(turn' = 0) + // Up
 0.45: (ped_x' = max(ped_x - 1, min_ped_x))&(turn' = 0) + // Left
 0.45: (ped_x' = min(ped_x + 1, street_length))&(turn' = 0); // Right
 
 // if ped crossing, keep crossing
 // 3.a condition for if pedestrian is crossing, then ...keep crossing, etx
-<<<<<<< HEAD
-[] (turn = 2)&(ped_y > sidewalk_height) ->
-0.9: (ped_y' = min(ped_y + 1, world_height))&(turn' = 0) + // Up
-0.1: (ped_y' = max(ped_y - 1, 0))&(turn' = 0); // Down
-
-// ped avoids car
-// 3.b. if ped crossing and car at a certain distance then the ped tries to avoid the car
-[] (turn = 2)&(ped_y > sidewalk_height)&(car_fast) ->
-// how to show that pedestrian is avoiding the car
-// adding 40% probability that the pedestrian acts like "normal" like in action 4.
-0.6: (ped_y' = min(ped_y + 1, world_height))&(turn' = 0) + // Up
-0.4: (ped_y' = max(ped_y - 1, 0))&(turn' = 0); // Down
-=======
-[] (turn = 2)&(ped_y >= sidewalk_height) ->
+[] (turn = 2)&(!is_on_sidewalk)&(!car_fast) -> //&(ped_y >= sidewalk_height) ->
 0.9: (ped_y' = min(ped_y + 1, world_height))&(turn' = 0) + // Up
 0.08: (ped_y' = max(ped_y - 1, 0))&(turn' = 0) + // Down
 0.01: (ped_x' = max(ped_x - 1, min_ped_x))&(turn' = 0) + // Left
@@ -242,23 +179,16 @@ ped_y : [0..world_height] init {person_y};
 
 // ped avoids car
 // 3.b. if ped crossing and car at a certain distance then the ped tries to avoid the car
-[] (turn = 2)&(ped_y >= sidewalk_height)&(car_fast) ->
+[] (turn = 2)&(!is_on_sidewalk)&(car_fast) ->//&(ped_y >= sidewalk_height)&(car_fast) ->
 // how to show that pedestrian is avoiding the car
 // adding 40% probability that the pedestrian acts like "normal" like in action 4.
 (0.3 + (0.4*0.9)):(ped_y' = min(ped_y + 1, world_height))&(turn' = 0) + // Up
 (0.3 + (0.4*0.08)): (ped_y' = max(ped_y - 1, 0))&(turn' = 0) + // Down
 0.4*0.01: (ped_x' = max(ped_x - 1, min_ped_x))&(turn' = 0) + // Left
 0.4*0.01: (ped_x' = min(ped_x + 1, street_length))&(turn' = 0); // Right
->>>>>>> ecc52e5337b912c662f14054923cc6c04c7eac51
 
 endmodule
 
 rewards
-<<<<<<< HEAD
-
 [] (finished=0) & (car_x = street_length) : 10;
-
-=======
-[] (finished=0) & (car_x = street_length) : 10;
->>>>>>> ecc52e5337b912c662f14054923cc6c04c7eac51
 endrewards

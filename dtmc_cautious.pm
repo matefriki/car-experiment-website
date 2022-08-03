@@ -28,7 +28,7 @@ const int block_y2 = {top_corner_y};
 // car properties
 const int car_height = 2;
 const int car_width = max_speed;
-// const int car_y = 5;
+const int car_y = 5;
 
 // pedestrian properties
 const int min_ped_x = 0;
@@ -96,7 +96,7 @@ formula vis_not_blocked = (dist_ped < ped_to_block)&(car_to_block < ped_to_block
 module Car
 car_x : [0..street_length] init {car_x};
 car_v : [0..max_speed] init 0;
-car_y : [0..world_height] init {car_y};
+// car_y : [0..world_height] init {car_y};
 visibility : [0..1] init 1;
 finished : [0..1] init 0;
 seen_ped : [0..1] init 0;
@@ -107,100 +107,14 @@ seen_ped : [0..1] init 0;
 [] (turn = 0)&(intersection) ->
 (visibility' = 0)&(turn' = 1);
 
-[] (
-        (
-            (
-             (seen_ped = 1) & (visibility = 1)
-            ) &
-            (
-                (
-                    (
-                        is_on_sidewalk
-                    ) & (
-                        (car_x - ped_x) > (2*car_v)
-                    )
-                ) | (
-                    (
-                        (car_x - ped_x) <= (2*car_v)
-                    ) & (
-                        car_v < 2
-                    )
-                )
-            )
-        ) |
-        (
-            (
-                (seen_ped = 1) & (visibility = 0)
-            ) & 
-            (
-                (
-                    (
-                        is_on_sidewalk
-                    ) & (
-                        (car_x - block_x2) > (2*car_v)
-                    )
-                ) | (
-                    (
-                        (car_x - block_x2) <= (2*car_v)
-                    ) & (
-                        car_v < 2
-                    )
-                )
-            )
-        )
-    | (
-            (seen_ped = 0) & (visibility = 0)
-        )
-       )  &  (turn = 1) & (finished=0) & (car_x < street_length) & (!crash) -> // Accelerate
+[] (turn = 1) & (finished=0) & (car_x < street_length) & (!crash) -> // Accelerate
 // change probabilities based on type of driver and/or environment
 0.45: (car_v' = min(max_speed, car_v + 2))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 2)))&(turn' = 2) +
 0.45: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 2) +
 0.09: (car_x' = min(street_length, car_x + car_v + 0))&(turn' = 2) +
 0.01: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 2);
 
-[] (
-        (
-            (
-                (seen_ped = 1) & (visibility = 1)
-            ) &    (
-                (
-                    car_v > 0
-                ) & (
-                    (
-                        (car_x - ped_x) <= (2*car_v)
-                    ) & (
-                        car_v > 2
-                    )
-                ) | (
-                    (
-                        !is_on_sidewalk
-                    ) & (
-                        car_x < ped_x
-                    )
-                )
-            )
-        ) | (
-            (
-                (seen_ped = 1) & (visibility = 0)
-            ) & (
-                (
-                    car_v > 0
-                ) & (
-                    (
-                        (car_x - block_x2) <= (2*car_v)
-                    ) & (
-                        car_v > 2
-                    )
-                ) | (
-                    (
-                        !is_on_sidewalk
-                    ) & (
-                        car_x < block_x2
-                    )
-                )
-            )
-        )
-    )  &  (turn = 1) & (finished=0) & (car_x < street_length) & (!crash) -> //& (car_v > 0) -> // Brake
+[] (turn = 1) & (finished=0) & (car_x < street_length) & (!crash) -> //& (car_v > 0) -> // Brake
 // change probabilities based on type of driver and/or environment
 0.45: (car_v' = max(0, car_v - 2))&(car_x' = min(street_length, car_x + max(0, car_v - 2)))&(turn' = 2) +
 0.45: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 2) +
@@ -208,37 +122,7 @@ seen_ped : [0..1] init 0;
 0.01: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 2);
 
 // aggressive car -> would accelerate randomly more likely (0.03) than it would brake (0.02)
-[] (
-        (
-            (
-                (seen_ped = 1) & (visibility = 1)
-            ) &    (
-                (
-                    (
-                        (car_x - ped_x) <= (2*car_v)
-                    ) & (
-                        car_v = 2
-                    )
-                ) | (
-                    !is_on_sidewalk & (car_x >= ped_x)
-                )
-            )
-        ) | (
-            (
-                (seen_ped = 1) & (visibility = 0)
-            ) & (
-                (
-                    (
-                        (car_x - block_x2) <= (2*car_v)
-                    ) & (
-                        car_v = 2
-                    )
-                ) | (
-                    !is_on_sidewalk & (car_x >= block_x2)
-                )
-            )
-        ) 
-    )  &  (turn = 1) & (finished=0) & (car_x < street_length) & (!crash) -> // Stays the same speed
+[] (turn = 1) & (finished=0) & (car_x < street_length) & (!crash) -> // Stays the same speed
 0.95: (car_x' = min(street_length, car_x + max(0, car_v)))&(turn' = 2) +
 0.02: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 2) +  //breaks
 0.03: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 2); //accelerates

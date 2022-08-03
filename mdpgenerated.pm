@@ -96,7 +96,7 @@ formula vis_not_blocked = (dist_ped < ped_to_block)&(car_to_block < ped_to_block
 module Car
 car_x : [0..street_length] init {car_x};
 car_v : [0..max_speed] init 0;
-//car_y : [0..world_height] init {car_y};
+// car_y : [0..world_height] init {car_y};
 visibility : [0..1] init 1;
 finished : [0..1] init 0;
 seen_ped : [0..1] init 0;
