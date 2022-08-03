@@ -28,7 +28,7 @@ const int block_y2 = sidewalk_height + block_height; //{top_corner_y}
 // car properties
 const int car_height = 2;
 const int car_width = max_speed;
-const int car_y = 5;
+//const int car_y = 5;
 
 // pedestrian properties
 const int min_ped_x = 0;
@@ -96,7 +96,7 @@ formula vis_not_blocked = (dist_ped < ped_to_block)&(car_to_block < ped_to_block
 module Car
 car_x : [0..street_length] init 5; //{car_x};
 car_v : [0..max_speed] init 0;
-//car_y : [0..world_height] init 5; //{car_y};
+car_y : [0..world_height] init 5; //{car_y};
 visibility : [0..1] init 1;
 finished : [0..1] init 0;
 seen_ped : [0..1] init 0;
