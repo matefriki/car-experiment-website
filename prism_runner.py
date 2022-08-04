@@ -10,13 +10,13 @@ import docker
 # Ranges for all state variables (inclusive) in order of input
 ranges = [
     (1, 300), # path_length
-    (0, 100), # person_x
+    (50, 100), # person_x
     (0, 15),  # person_y
-    (0, 100), # car_x
+    (50, 100), # car_x
     (5, 5),   # car_y
-    (0, 100), # top_corner_x
+    (50, 100), # top_corner_x
     (0, 15),  # top_corner_y
-    (0, 100), # bottom_corner_x
+    (50, 100), # bottom_corner_x
     (0, 15)   # bottom_corner_y
 ]
 
@@ -72,6 +72,14 @@ with open("program.pm", "w") as file:
     file.write(program)
 sleep(.1)
 
+# writes mdp program to run in storm
+with open("mdpgenerated.pm", "r") as file:
+    mdptemp = file.read()
+mdpprogram = mdptemp.format(person_x = person_x, person_y = person_y, car_x = car_x, car_y = car_y, top_corner_x = top_corner_x, top_corner_y = top_corner_y,  bottom_corner_x = bottom_corner_x, bottom_corner_y = bottom_corner_y)
+with open("mdpprogram.pm", "w") as file:
+    file.write(mdpprogram)
+
+
 system("{} program.pm -simpath {} path.txt >/dev/null 2>&1".format(prism_path, path_length)) # >/dev/null 2>&1
 
 def load_path(file_name):
@@ -98,6 +106,9 @@ system("python3 trace_convert.py")
 
 client = docker.from_env()
 
-client.containers.run("lposch/tempest-devel-traces:latest", "storm --prism program.pm --prop prism_files/dtmc_props.props --trace-input trace_input.txt --exportresult output --buildstateval", volumes = {os.getcwd(): {'bind': '/mnt/vol1', 'mode': 'rw'}}, working_dir = "/mnt/vol1", stderr = True)
+client.containers.run("lposch/tempest-devel-traces:latest", "storm --prism program.pm --prop prism_files/dtmc_props.props --trace-input trace_input.txt --exportresult dtmcprops.json --buildstateval", volumes = {os.getcwd(): {'bind': '/mnt/vol1', 'mode': 'rw'}}, working_dir = "/mnt/vol1", stderr = True)
+client.containers.run("lposch/tempest-devel-traces:latest", "storm --prism mdpprogram.pm --prop prism_files/property.props --trace-input trace_input.txt --exportresult mdpprops.json --buildstateval", volumes = {os.getcwd(): {'bind': '/mnt/vol1', 'mode': 'rw'}}, working_dir = "/mnt/vol1", stderr = True)
+
+system("python3 graph_generator.py")
 # system("docker run --mount type=bind,source=\"$(pwd)\",target=/data -w /data/data --rm -it --name stormtrace lposch/tempest-devel-traces:latest")
 # system("storm --prism ../car-experiment-website/mdp.pm --prop ../car-experiment-website/prism_files/property.props --trace-input ../car-experiment-website/trace_input.txt --exportresult testing --buildstateval")
