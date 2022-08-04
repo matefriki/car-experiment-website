@@ -1,29 +1,28 @@
 @font-face {
     font-family: 'Barlow';
     src: URL('fonts/Barlow-SemiBold.ttf') format('truetype');
-  }
+}
 
-html, body {
+html,
+body {
     height: 100%;
 }
 
 body {
     margin: 0;
-    display: flex;
-    flex-direction: column;
     justify-content: center;
     background: black;
     font-family: Barlow;
 }
 
 .controls {
-    flex-grow: .4;
     display: flex;
     flex-direction: column;
+    align-items: stretch;
 }
 
-.controls > .outline {
-    margin: 10px;
+.controls>.outline {
+    margin-bottom: 10px;
     border: 5px solid #3498db;
     flex-grow: 1;
     display: flex;
@@ -31,14 +30,14 @@ body {
 }
 
 .unselectable {
-    -webkit-user-select: none; /* Safari */        
-    -moz-user-select: none; /* Firefox */
-    -ms-user-select: none; /* IE10+/Edge */
-    user-select: none; /* Standard */
-}
-
-.bottom {
-    flex-grow: 1;
+    -webkit-user-select: none;
+    /* Safari */
+    -moz-user-select: none;
+    /* Firefox */
+    -ms-user-select: none;
+    /* IE10+/Edge */
+    user-select: none;
+    /* Standard */
 }
 
 .scene {
@@ -47,9 +46,84 @@ body {
     background: #CCC;
 }
 
+.bottom {
+    width: 100%;
+    display: inline-block;
+}
+
+.graph-container {
+    width: 35vw;
+    height: 25vw;
+    background: green;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    margin: 2vw 0px;
+    outline: 5px solid #3498db;
+    animation: graph-show .4s;
+    display: none;
+}
+
+.graph {
+    width: 100%;
+    height: 100%;
+}
+
+.graph-container>.overlay {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 100%;
+    height: 100%;
+    opacity: 0.0;
+    background: black;
+    display: inline-block;
+    animation: graph-fade .8s;
+    margin-bottom: -100%;
+}
+
+@keyframes graph-show {
+    0% {
+        width: 0vw;
+        opacity: 0.0;
+        height: 2vw;
+    }
+
+    60% {
+        width: 40vw;
+        opacity: 1.0;
+        height: 2vw;
+    }
+
+    70% {
+        width: 35vw;
+        opacity: 1.0;
+        height: 2vw;
+    }
+
+    100% {
+        width: 35vw;
+        opacity: 1.0;
+        height: 25vw;
+    }
+}
+
+@keyframes graph-fade {
+    0% {
+        opacity: 1.0;
+    }
+
+    50% {
+        opacity: 1.0;
+    }
+
+    100% {
+        opacity: 0.0;
+    }
+}
+
 .pane {
     width: 200px;
-    height: 100%;
     border-right: 5px solid #3498db;
 }
 
@@ -70,11 +144,11 @@ body {
     flex-direction: row;
 }
 
-.property > span {
+.property>span {
     padding: 10px;
 }
 
-.property > .input {
+.property>.input {
     padding: 6px;
     margin: 4px 0px;
     margin-left: 0;
@@ -111,6 +185,7 @@ body {
         visibility: visible;
         opacity: 1;
     }
+
     to {
         visibility: hidden;
         opacity: 0;
@@ -118,8 +193,8 @@ body {
 }
 
 .hidden {
-    animation: hide .2s;
-    animation-fill-mode: forwards;
+    animation: hide .2s !important;
+    animation-fill-mode: forwards !important;
 }
 
 @keyframes full_hide {
@@ -127,6 +202,7 @@ body {
         display: flex;
         opacity: 1;
     }
+
     to {
         display: none;
         opacity: 0;
@@ -134,17 +210,12 @@ body {
 }
 
 .fully_hidden {
-    animation: full_hide .2s;
-    animation-fill-mode: forwards;
+    animation: full_hide .2s !important;
+    animation-fill-mode: forwards !important;
 }
 
 .editable:hover {
     background: #222;
-}
-
-.graph {
-    flex-grow: 1;
-    width: 100%;
 }
 
 .generate {
@@ -157,7 +228,7 @@ body {
     flex-wrap: wrap;
 }
 
-.generate > .input {
+.generate>.input {
     height: 30px;
     padding: 15px 10px;
     border-radius: 15px;
@@ -169,7 +240,7 @@ body {
     animation: background .2s;
 }
 
-.generate > .label {
+.generate>.label {
     font-size: 30px;
     color: #3498db;
 }
@@ -194,7 +265,7 @@ body {
     background: #2a79ad;
 }
 
-.generate > .big_button {
+.generate>.big_button {
     margin-left: 30px;
 }
 
@@ -206,7 +277,7 @@ body {
     flex-grow: 1;
 }
 
-.loading > .progress {
+.loading>.progress {
     width: 70%;
     margin: 0 auto;
     height: 30px;
@@ -214,11 +285,16 @@ body {
 }
 
 @keyframes pulse {
-    from { background: #3aadf9; }
-    to { background: #2a79ad; }
+    from {
+        background: #3aadf9;
+    }
+
+    to {
+        background: #2a79ad;
+    }
 }
 
-.loading > .progress > .bar {
+.loading>.progress>.bar {
     width: 0px;
     height: calc(100% - 8px);
     background: #3aadf9;
@@ -226,4 +302,45 @@ body {
     animation: pulse .5s ease-in;
     animation-direction: alternate-reverse;
     animation-iteration-count: infinite;
+}
+
+.strat-dropdown {
+    width: calc(100% - 16px);
+    height: 40px;
+    margin: 8px;
+}
+
+.spinner {
+    width: 4vw;
+    height: 4vw;
+    position: relative;
+    left: calc(50% - 2vw);
+    margin-top: 1vw;
+    animation: spinner-pop .4s linear, spinner-spin .8s infinite linear;
+    animation-delay: 0s, .4s;
+    display: none;
+}
+
+@keyframes spinner-pop {
+    0% {
+        transform: scale(0) rotate(0deg);
+    }
+
+    50% {
+        transform: scale(1.2) rotate(90deg);
+    }
+
+    100% {
+        transform: scale(1) rotate(180deg);
+    }
+}
+
+@keyframes spinner-spin {
+    from {
+        transform: rotate(180deg);
+    }
+
+    to {
+        transform: rotate(540deg);
+    }
 }

@@ -34,8 +34,6 @@ def make_dtmc(temp):
     strats = open('strategy.json')
     strategy = json.load(strats)
 
-
-
     file = open(temp, "r")    
     lines = [line.strip() for line in file.readlines()]
     file.close()
@@ -55,13 +53,11 @@ def make_dtmc(temp):
             for strat in strategy:
                 for key in strategy[strat]:
                     if strat_match.group(0) == key: 
-                        print(f"dict[key]: {strategy[strat][key]}")
                         lines[i] = re.sub(strat_regex, f"[] {strategy[strat][key]}  & ", lines[i]) 
-    # rewrites lines into new files
     replaced = '\n'.join(lines)
 
     for strat in strategy:
-        with open(f"dtmc{strat}.pm", "w") as f:
+        with open(f"dtmc_{strat}.pm", "w") as f:
             f.write(replaced)
 
 
@@ -69,7 +65,7 @@ def main():
    
 
     # change this to final PRISM file
-    prism_file = "prism_files/joint_cx.pm"
+    prism_file = "mdp.pm"
 
     # makes ones mdp file
     make_mdp(prism_file)

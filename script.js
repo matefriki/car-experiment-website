@@ -3,6 +3,8 @@ let app, socket;
 let unit = 0;
 
 // References to text inputs
+let spinner;
+let strat_dropdown;
 let car_input_x, car_input_y;
 let person_input_x, person_input_y;
 let top_input_x, top_input_y, bottom_input_x, bottom_input_y;
@@ -18,6 +20,13 @@ window.addEventListener('load', () => {
     // Create socket connection with server
     socket = io();
     socket.on("path", animatePath);
+    socket.on("graph", displayGraph);
+
+    // Get reference to the strategy selection dropdown from html
+    strat_dropdown = document.body.querySelector(".strat-dropdown");
+
+    // Get reference to the graph spinner
+    spinner = document.body.querySelector(".spinner");
 
     // Get references to the car's inputs from html
     let car_inputs = document.body.querySelectorAll('.pane.car .input');
@@ -143,6 +152,9 @@ window.addEventListener('load', () => {
         let generatePane = document.querySelector('.generate');
         generatePane.style.display = "none";
         setLoadingVisibility(true);
+
+        // Show the graph spinner
+        setSpinnerVisibility(true);
 
         // Deactivate the UI controls
         setControlsActive(false);
@@ -303,17 +315,23 @@ function setLoadingVisibility(visible) {
     else loadingPane.classList.add("fully_hidden");
 }
 
+// Makes the graph spinner either visible or fade away depending on the given boolean
+function setSpinnerVisibility(visible) {
+    if (visible) spinner.style.display = "inline-block";
+    else spinner.style.display = "none";
+}
+
 // Enable or disable both html controls and draggable object in Pixi scene, depending on whether "active" is true or false
 function setControlsActive(active) {
-    // Hide the randomize buttons with fade animation
-    let randBtns = document.querySelectorAll('.random');
+    // Hide the randomize buttons and dropdowns with fade animation
+    let randBtns = document.body.querySelectorAll('.random, .dropdown-component');
     randBtns.forEach((rand) => {
         if (active) rand.classList.remove("hidden");
         else rand.classList.add("hidden");
     });
 
     // Disable editing of text inputs, though they remain visible
-    document.querySelectorAll('.controls .input').forEach((inp) => {
+    document.body.querySelectorAll('.controls .input').forEach((inp) => {
         inp.setAttribute("contenteditable", active ? "true" : "false");
         if (active) inp.classList.add("editable");
         else inp.classList.remove("editable");
@@ -334,7 +352,7 @@ function sendGenerateMessage() {
 
     let bottom_point = [Math.min(...x_values), Math.min(...y_values)].map((n) => n.toString());
     let top_point = [Math.max(...x_values), Math.max(...y_values)].map((n) => n.toString());
-    socket.emit('generate', path_length.innerText, person_input_x.innerText, person_input_y.innerText, car_input_x.innerText, car_input_y.innerText, top_point[0], top_point[1], bottom_point[0], bottom_point[1]);
+    socket.emit('generate', strat_dropdown.dataset.value, path_length.innerText, person_input_x.innerText, person_input_y.innerText, car_input_x.innerText, car_input_y.innerText, top_point[0], top_point[1], bottom_point[0], bottom_point[1]);
 }
 
 // Handle beginning of drag event
@@ -361,13 +379,13 @@ function carDragMove() {
         let range_y = getInputRange(car_input_y);
         // Round mouse position to fit on grid, and clamp within world boundaries
         let grid_x = clamp(Math.round(new_x / unit), range_x[0], range_x[1]);
-        let grid_y = clamp(Math.round(new_y / unit), range_y[0], range_y[1]);
+        let grid_y = clamp(world_height - Math.round(new_y / unit), range_y[0], range_y[1]);
         // Resize grid coord by size of unit to get new position
         this.x = grid_x * unit;
-        this.y = grid_y * unit;
+        this.y = (world_height - grid_y) * unit;
         // Update text inputs with new position (reflected vertically)
         car_input_x.innerHTML = grid_x;
-        car_input_y.innerHTML = world_height - grid_y;
+        car_input_y.innerHTML = grid_y;
     }
 }
 
@@ -381,13 +399,13 @@ function personDragMove() {
         let range_y = getInputRange(person_input_y);
         // Round mouse position to fit on grid, and clamp within world boundaries
         let grid_x = clamp(Math.round(newPosition.x / unit), range_x[0], range_x[1]);
-        let grid_y = clamp(Math.round(newPosition.y / unit), range_y[0], range_y[1]);
+        let grid_y = clamp(world_height - Math.round(newPosition.y / unit), range_y[0], range_y[1]);
         // Resize grid coord by size of unit to get new position
         this.x = grid_x * unit;
-        this.y = grid_y * unit;
+        this.y = (world_height - grid_y) * unit;
         // Update text inputs with new position (reflected vertically)
         person_input_x.innerHTML = grid_x;
-        person_input_y.innerHTML = world_height - grid_y;
+        person_input_y.innerHTML = grid_y;
     }
 }
 
@@ -403,18 +421,18 @@ function cornerDragMove() {
         range_y = getInputRange(isTopCorner ? top_input_y : bottom_input_y);
         // Round mouse position to fit on grid, and clamp within world boundaries
         let grid_x = clamp(Math.round(newPosition.x / unit), range_x[0], range_x[1]);
-        let grid_y = clamp(Math.round(newPosition.y / unit), range_y[0], range_y[1]);
+        let grid_y = clamp(world_height - Math.round(newPosition.y / unit), range_y[0], range_y[1]);
         // Update the text inputs to reflect new position
         if (this.name == "top_corner") {
             top_input_x.innerHTML = grid_x;
-            top_input_y.innerHTML = world_height - grid_y;
+            top_input_y.innerHTML = grid_y;
         } else {
             bottom_input_x.innerHTML = grid_x;
-            bottom_input_y.innerHTML = world_height - grid_y;
+            bottom_input_y.innerHTML = grid_y;
         }
         // Resize grid coord by size of unit to get new position
         this.x = grid_x * unit;
-        this.y = grid_y * unit;
+        this.y = (world_height - grid_y) * unit;
     }
     // Rescale and position filled rect of block to reflect new handle positions
     adjustBlock();
@@ -445,7 +463,7 @@ function animatePath(path) {
 
             // Update object positions
             car.x = parseInt(path["car_x"][path_ind]) * unit;
-            car.y = (world_height - parseInt(path["car_y"][path_ind])) * unit;
+            car.y = (world_height - 5) * unit;
             person.x = parseInt(path["ped_x"][path_ind]) * unit;
             person.y = (world_height - parseInt(path["ped_y"][path_ind])) * unit;
 
@@ -457,4 +475,27 @@ function animatePath(path) {
         }
     });
     ticker.start();
+}
+
+// Display the generated graph at the bottom of the page
+function displayGraph(graph) {
+    let blob = new Blob([graph], { type: 'image/png' });
+    let url = URL.createObjectURL(blob);
+    var img = new Image();
+
+    let canvas = document.body.querySelector(".graph");
+    let container = document.body.querySelector(".graph-container");
+    img.addEventListener("load", () => {
+        var ctx = canvas.getContext("2d");
+        let ratio = 25 / 70;
+        let width = 1000;
+        canvas.width = width;
+        canvas.height = width * ratio;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    });
+
+    setSpinnerVisibility(false);
+    container.style.display = "inline-block";
+
+    img.src = url;
 }

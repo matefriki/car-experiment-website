@@ -35,7 +35,7 @@ io.on('connection', (socket) => {
   console.log('a user connected');
   socket.on('generate', (strat_name, path_length, person_x, person_y, car_x, car_y, top_corner_x, top_corner_y, bottom_corner_x, bottom_corner_y) => {
     queue.push((closed) => {
-      const runner = spawn('python3', ['prism_runner.py'], { timeout: 5000 });
+      const runner = spawn('python3', ['prism_runner.py'], { timeout: 50000 });
       runner.stdin.write(`${strat_name} ${path_length} ${person_x} ${person_y} ${car_x} ${car_y} ${top_corner_x} ${top_corner_y} ${bottom_corner_x} ${bottom_corner_y}`);
       runner.stdin.end();
 
@@ -50,16 +50,16 @@ io.on('connection', (socket) => {
         socket.emit("path", buffer);
         console.log('close');
         closed();
-      });
 
-      // Send graph placeholder
-      fs.readFile('graph.png', (err, data) => {
-        if (err) {
-          console.error(err);
-          return;
-        }
+        // Send graph placeholder
+        fs.readFile('graph.png', (err, data) => {
+          if (err) {
+            console.error(err);
+            return;
+          }
 
-        setTimeout(() => socket.emit("graph", data), 2000);
+          setTimeout(() => socket.emit("graph", data), 2000);
+        });
       });
     });
 
