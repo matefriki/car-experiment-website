@@ -21,13 +21,16 @@ def getProbs(file):
     keys = []
     for key in file:
         keys.append(key['v'])
+    # print(len(keys))
     return keys
 
+# print(len(Pfile))
 # creating a dataframe with model checked values
 columns = ['Pmin', 'Pmax', 'P', 'Rmin', 'Rmax', 'R']
 # d = pd.DataFrame(0, index=np.arange(len(data)), columns=feature_list)
 df1 = pd.DataFrame(0, index=np.arange(len(Pfile)), columns=columns)
 for i in df1.index:
+    # print(i)
     p = getProbs(Pfile)[i]
     r = getProbs(Rfile)[i]
     pmin = getProbs(Pminfile)[i]
@@ -90,7 +93,7 @@ def firstPlot():
     
     # plt.tight_layout()
     axs1.margins(0)
-    plt.savefig("graph.png")
+    plt.savefig("graph1.png")
 
 def secondPlot():    
     # set up the plots
@@ -120,7 +123,8 @@ def secondPlot():
     axs2.plot(1, 0, ">k", transform=axs2.get_yaxis_transform(), clip_on=False)
     axs2.set_title('titel')
         
-    plt.savefig("graph2.png")
+    axs2.margins(0)
+    plt.savefig("graph.png")
 
 firstPlot()
 secondPlot()
