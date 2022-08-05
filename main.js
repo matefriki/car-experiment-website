@@ -61,6 +61,16 @@ io.on('connection', (socket) => {
           setTimeout(() => socket.emit("graph", data), 2000);
         });
       });
+
+      // Send graph placeholder
+      fs.readFile('graph.png', (err, data) => {
+        if(err) {
+          console.error(err);
+          return;
+        }
+
+        setTimeout(() => socket.emit("graph", data), 2000);
+      });
     });
 
     handleQueue();

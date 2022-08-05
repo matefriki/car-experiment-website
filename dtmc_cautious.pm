@@ -1,4 +1,4 @@
-mdp
+dtmc
 
 const int street_length = 100;
 const int sidewalk_height = 2;

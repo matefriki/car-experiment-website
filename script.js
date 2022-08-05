@@ -487,7 +487,7 @@ function displayGraph(graph) {
     let container = document.body.querySelector(".graph-container");
     img.addEventListener("load", () => {
         var ctx = canvas.getContext("2d");
-        let ratio = 25 / 70;
+        let ratio = 25 / 35;
         let width = 1000;
         canvas.width = width;
         canvas.height = width * ratio;

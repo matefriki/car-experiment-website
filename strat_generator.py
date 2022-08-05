@@ -66,6 +66,7 @@ def main():
 
     # change this to final PRISM file
     prism_file = "mdp.pm"
+    # prism_file = input("Model file to convert to template: ") # use this to give manual input to convert 
 
     # makes ones mdp file
     make_mdp(prism_file)
