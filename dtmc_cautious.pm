@@ -95,7 +95,7 @@ formula vis_is_blocked = (dist_ped > ped_to_block)&(dist_ped > car_to_block);
 formula vis_not_blocked = (dist_ped < ped_to_block)&(car_to_block < ped_to_block);
 
 // new visibility criteria
-formula car_left = (car_x < block_x1);
+formula car_left = (x1 < block_x1);
 formula block_line = ((block_y2 - block_y1)/(block_x2 - block_x1))*(ped_x - block_x1) + block_y1;
 //formula ped_right = block_line > ped_y;
 formula ped_right = ((y2 - block_y2)*(block_x2 - block_x1) <= (x2 - block_x2)*(block_y2 - block_y1));
@@ -105,7 +105,7 @@ formula same_side1 = ((car_line1 > ped_y) & (car_line2 > ped_y)) | ((car_line1 <
 //formula same_side1 = (((((y2 - block_y2)*(block_y2 - y1) - (x2 - block_x2)*(block_x2 - x1)) >= 0) & (((y2 - block_y1)*(block_y1 - y1) - (x2 - block_x1)*(block_x1 - x1)) >= 0)) | (((y2 - block_y2)*(block_y2 - y1) - (x2 - block_x2)*(block_x2 - x1)) < 0) & (((y2 - block_y1)*(block_y1 - y1) - (x2 - block_x1)*(block_x1 - x1)) < 0));
 formula left_blocked = car_left & ped_right & !same_side1;
 
-formula car_top = car_x >= block_x1 & car_x <= block_x2;
+formula car_top = x1 >= block_x1 & x1 <= block_x2;
 formula ped_down = y2 <= block_y2;
 formula same_side2 = (((((y2 - block_y2)*(block_y2 - y1) - (x2 - block_x2)*(block_x2 - x1)) >= 0) & (((y2 - block_y2)*(block_y2 - y1) - (x2 - block_x1)*(block_x1 - x1)) >= 0)) | (((y2 - block_y2)*(block_y2 - y1) - (x2 - block_x2)*(block_x2 - x1)) < 0) & (((y2 - block_y2)*(block_y2 - y1) - (x2 - block_x1)*(block_x1 - x1)) < 0));
 formula top_blocked = car_top & ped_down & !same_side2;
