@@ -40,18 +40,15 @@ for i in df1.index:
     df1.loc[i,:] = [pmin, pmax, p, rmin, rmax, r]
 
 # only use data until Pmax-Pmix < eps (data after this is useless)
-idx = 0
+idx = df1.index[-1]
 eps = 0.01
 rodiff11 = df1['Pmax'] - df1['Pmin']
-geek = np.argpartition(pd.Series(rodiff11).array, 5)
-# print(geek[91])
-for i in range(len(geek)):
-    if geek[i] <=5 :
-        if rodiff11[i] < eps:
-            # print(f"idx: {idx}; geek: {geek[idx]}; arr: {rodiff11[idx]}")
-            idx = i
-            break
-df = pd.DataFrame(0, index=np.arange(idx), columns=columns)
+
+while idx > 0:
+    if np.abs(rodiff11[idx]) < eps:
+        idx = idx -1 
+    else:
+        break
 df = df1[0:idx]
 
 # both graphs will plot to the same state tick
