@@ -1,7 +1,7 @@
 import re
 import json
 
-file = open("path.txt", "r")
+file = open("temp/path.txt", "r")
 lines = [line.strip() for line in file.readlines()]
 file.close()
 

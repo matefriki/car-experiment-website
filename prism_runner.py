@@ -80,7 +80,7 @@ with open("mdpprogram.pm", "w") as file:
     file.write(mdpprogram)
 
 
-system("{} program.pm -simpath {} path.txt >/dev/null 2>&1".format(prism_path, path_length)) # >/dev/null 2>&1
+system("{} program.pm -simpath {} temp/path.txt >/dev/null 2>&1".format(prism_path, path_length)) # >/dev/null 2>&1
 
 def load_path(file_name):
     file = open(file_name, "r")
@@ -99,7 +99,7 @@ def load_path(file_name):
     return path
 
 sleep(.1)
-path = load_path("path.txt")
+path = load_path("temp/path.txt")
 print(json.dumps(path))
 
 system("python3 trace_convert.py")
