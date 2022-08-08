@@ -26,7 +26,7 @@ def make_mdp(temp):
 
     # rewrites lines into new file
     replaced = '\n'.join(lines)
-    with open("mdpgenerated.pm", "w") as f:
+    with open("temp/mdpgenerated.pm", "w") as f:
         f.write(replaced)
 
 # generates DTMC files for a dictionary and file input
@@ -57,26 +57,25 @@ def make_dtmc(temp):
     replaced = '\n'.join(lines)
 
     for strat in strategy:
-        with open(f"dtmc_{strat}.pm", "w") as f:
+        with open(f"temp/dtmc_{strat}.pm", "w") as f:
             f.write(replaced)
 
 
-def main():
+def main(prism_file=""):
    
 
-    # change this to final PRISM file
-    prism_file = "mdp.pm"
-    # prism_file = input("Model file to convert to template: ") # use this to give manual input to convert 
+    # If prism file is given (executing normally should be mdp.pm), use it. If empty, ask user for it.
+    if prism_file == "":
+        prism_file = input("Model file to convert to template: ") # use this to give manual input to convert 
 
     # makes ones mdp file
     make_mdp(prism_file)
+    # makes one dtmc file per strategy listed in the json file
     make_dtmc(prism_file)
 
-    # makes one dtmc file per strategy listed in the json file
+    # 
     # for strat in strategy:
     #     make_dtmc(strategy[strat], prism_file)
 
 if __name__ == '__main__':
-    main()
-else:
-    print("No PRISM files generated")
+    main("mdp.pm")

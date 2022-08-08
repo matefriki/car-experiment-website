@@ -5,6 +5,7 @@ import os
 import json
 import sys
 import docker
+import strat_generator
 
 
 # Ranges for all state variables (inclusive) in order of input
@@ -57,12 +58,17 @@ strat_name, path_length, person_x, person_y, car_x, car_y, top_corner_x, top_cor
 
 # Ensure strat_name is in list of available options
 strat_files = {
-    "cautious": "dtmc_cautious.pm",
-    "normal": "dtmc_normal.pm",
-    "agressive": "dtmc_agressive.pm"
+    "cautious": "temp/dtmc_cautious.pm",
+    "normal": "temp/dtmc_normal.pm",
+    "agressive": "temp/dtmc_agressive.pm"
 }
 if strat_name not in strat_files:
     sys.exit("Invalid input: strategy does not exist")
+
+# check if mpggenerated is there. If not, creates it in temp folder, along with dtmc files
+path_to_generated_mdp = "temp/mdpgenerated.pm"
+if not os.path.exists(path_to_generated_mdp):
+    strat_generator.main("mdp.pm")
 
 with open(strat_files[strat_name], "r") as file:
     template = file.read()
@@ -72,8 +78,8 @@ with open("program.pm", "w") as file:
     file.write(program)
 sleep(.1)
 
-# writes mdp program to run in storm
-with open("mdpgenerated.pm", "r") as file:
+# writes mdp program to run in storm, if file did not exist before, creates it from mpd.pm
+with open(path_to_generated_mdp, "r") as file:
     mdptemp = file.read()
 mdpprogram = mdptemp.format(person_x = person_x, person_y = person_y, car_x = car_x, car_y = car_y, top_corner_x = top_corner_x, top_corner_y = top_corner_y,  bottom_corner_x = bottom_corner_x, bottom_corner_y = bottom_corner_y)
 with open("mdpprogram.pm", "w") as file:
