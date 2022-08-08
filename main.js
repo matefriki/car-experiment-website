@@ -52,7 +52,7 @@ io.on('connection', (socket) => {
         closed();
 
         // Send graph placeholders
-        fs.readFile('graph_left.png', (err, data) => {
+        fs.readFile('temp/graph_left.png', (err, data) => {
           if (err) {
             console.error(err);
             return;
@@ -61,7 +61,7 @@ io.on('connection', (socket) => {
           setTimeout(() => socket.emit("graph_left", data), 1000);
         });
 
-        fs.readFile('graph_right.png', (err, data) => {
+        fs.readFile('temp/graph_right.png', (err, data) => {
           if (err) {
             console.error(err);
             return;
