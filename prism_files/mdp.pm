@@ -69,6 +69,8 @@ formula top_blocked = car_top & ped_down & !same_side2;
 
 formula no_vis = left_blocked | top_blocked;
 
+formula car_close_crosswalk = (car_x > crosswalk_pos - 10) & (car_x < crosswalk_pos + crosswalk_width);
+
 module Car
 car_x : [min_street_length..street_length] init 55; //{car_x};
 car_v : [0..max_speed] init 0;

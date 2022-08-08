@@ -60,7 +60,11 @@ strat_name, path_length, person_x, person_y, car_x, car_y, top_corner_x, top_cor
 strat_files = {
     "cautious": "temp/dtmc_cautious.pm",
     "normal": "temp/dtmc_normal.pm",
-    "agressive": "temp/dtmc_agressive.pm"
+    "agressive": "temp/dtmc_agressive.pm",
+    "car1":"temp/dtmc_car1.pm",
+    "car2":"temp/dtmc_car2.pm",
+    "car3":"temp/dtmc_car3.pm",
+    "car4":"temp/dtmc_car4.pm"
 }
 if strat_name not in strat_files:
     sys.exit("Invalid input: strategy does not exist")

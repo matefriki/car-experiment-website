@@ -8,5 +8,10 @@
         "[accelerate]": "test acc",
         "[brake]": "test break",
         "[nop]": "test nop"
+    },
+    "car1": {
+        "[accelerate]": "(( !((!is_on_sidewalk)&(visibility=1))&!(car_close_crosswalk) ) | ( !((!is_on_sidewalk)&(visibility=1))&(car_close_crosswalk)&(car_v < 2) ))",
+        "[brake]": "(((!is_on_sidewalk)&(visibility=1)) | (!((!is_on_sidewalk)&(visibility=1))&(car_close_crosswalk)&(car_v > 2)))",
+        "[nop]": "(!((!is_on_sidewalk)&(visibility=1))&(car_close_crosswalk)&(car_v = 2))"
     }
 }

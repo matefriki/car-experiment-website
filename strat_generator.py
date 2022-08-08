@@ -32,33 +32,32 @@ def make_mdp(temp):
 # generates DTMC files for a dictionary and file input
 def make_dtmc(temp):
     strats = open('strategy.json')
-    strategy = json.load(strats)
+    strategy = json.load(strats) ## this is a dict, keys are names of strategies
+    for strat in strategy:
 
-    file = open(temp, "r")    
-    lines = [line.strip() for line in file.readlines()]
-    file.close()
-    
-    for i, line in enumerate(lines):
-        # change file type from mdp to dtmc
-        lines[i] = re.sub("mdp", "dtmc", lines[i])
-        label_match = label_reg.search(line)
-        # compatible with "".format for changing variables from user input
-        if label_match:
-            start_ind = line.rfind("init") + 4 if "init" in line else line.rfind("=") + 1
-            label = label_match.group(1)
-            lines[i] = line[:start_ind] + " {{{}}};".format(label)
-        # finds strategy labels in PRISM file "[accelerate]..." and adds in corresponding guard
-        strat_match = strategies_label.search(line)
-        if strat_match:
-            for strat in strategy:
+        file = open(temp, "r")    
+        lines = [line.strip() for line in file.readlines()]
+        file.close()
+        
+        for i, line in enumerate(lines):
+            # change file type from mdp to dtmc
+            lines[i] = re.sub("mdp", "dtmc", lines[i])
+            label_match = label_reg.search(line)
+            # compatible with "".format for changing variables from user input
+            if label_match:
+                start_ind = line.rfind("init") + 4 if "init" in line else line.rfind("=") + 1
+                label = label_match.group(1)
+                lines[i] = line[:start_ind] + " {{{}}};".format(label)
+            # finds strategy labels in PRISM file "[accelerate]..." and adds in corresponding guard
+            strat_match = strategies_label.search(line)
+            if strat_match:
                 for key in strategy[strat]:
                     if strat_match.group(0) == key: 
                         lines[i] = re.sub(strat_regex, f"[] {strategy[strat][key]}  & ", lines[i]) 
-    replaced = '\n'.join(lines)
-
-    for strat in strategy:
+        replaced = '\n'.join(lines)
         with open(f"temp/dtmc_{strat}.pm", "w") as f:
             f.write(replaced)
+        
 
 
 def main(prism_file=""):
