@@ -90,7 +90,7 @@ def firstPlot():
     
     # plt.tight_layout()
     axs1.margins(0)
-    plt.savefig("graph1.png")
+    plt.savefig("graph_left.png")
 
 def secondPlot():    
     # set up the plots
@@ -121,7 +121,7 @@ def secondPlot():
     axs2.set_title('titel')
         
     axs2.margins(0)
-    plt.savefig("graph.png")
+    plt.savefig("graph_right.png")
 
 firstPlot()
 secondPlot()
