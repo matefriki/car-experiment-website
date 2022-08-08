@@ -64,7 +64,7 @@ def make_dtmc(temp):
 def main(prism_file=""):
    
 
-    # If prism file is given (executing normally should be mdp.pm), use it. If empty, ask user for it.
+    # If prism file is given (executing normally should be prism_files/mdp.pm), use it. If empty, ask user for it.
     if prism_file == "":
         prism_file = input("Model file to convert to template: ") # use this to give manual input to convert 
 
@@ -78,4 +78,4 @@ def main(prism_file=""):
     #     make_dtmc(strategy[strat], prism_file)
 
 if __name__ == '__main__':
-    main("mdp.pm")
+    main("prism_files/mdp.pm")

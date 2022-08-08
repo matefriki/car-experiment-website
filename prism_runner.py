@@ -68,7 +68,7 @@ if strat_name not in strat_files:
 # check if mpggenerated is there. If not, creates it in temp folder, along with dtmc files
 path_to_generated_mdp = "temp/mdpgenerated.pm"
 if not os.path.exists(path_to_generated_mdp):
-    strat_generator.main("mdp.pm")
+    strat_generator.main("prism_files/mdp.pm")
 
 with open(strat_files[strat_name], "r") as file:
     template = file.read()
