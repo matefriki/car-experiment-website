@@ -102,9 +102,9 @@ seen_ped : [0..1] init 0;
 	0.02: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 2) +  //breaks
 	0.03: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 2); //accelerates
 
-	[] (turn = 1) & (finished = 0) & (car_x = street_length) -> (finished'=1);
-	[] (turn = 1) & (finished = 0) & (crash) -> (finished'=1);
+	[] (turn = 1) & (finished = 0) & ((car_x = street_length) | (crash)) -> (finished'=1);
 	[] (turn = 1) & (finished = 1) -> true;
+	
 	 
 	 
 endmodule
