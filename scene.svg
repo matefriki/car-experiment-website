@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 25.2.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 100 15" style="enable-background:new 0 0 100 15;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#E6E7E8;}
+	.st1{fill:#58595B;}
+	.st2{fill:#414042;}
+	.st3{clip-path:url(#SVGID_2_);}
+	.st4{fill:none;stroke:#F5B810;stroke-width:0.25;stroke-miterlimit:10;}
+	.st5{fill:none;stroke:#FFFFFF;stroke-width:0.25;stroke-miterlimit:10;}
+	.st6{fill:none;stroke:#FFFFFF;stroke-width:0.25;stroke-miterlimit:10;stroke-dasharray:2,2;}
+	.st7{fill:#414042;stroke:#FFFFFF;stroke-width:0.5;stroke-miterlimit:10;stroke-dasharray:2;}
+</style>
+<rect y="13" class="st0" width="100" height="2"/>
+<rect class="st0" width="100" height="2"/>
+<rect y="10.9" class="st1" width="100" height="2.1"/>
+<rect y="2" class="st2" width="100" height="9"/>
+<g>
+	<defs>
+		<rect id="SVGID_1_" x="5" y="10.9" width="95" height="2.8"/>
+	</defs>
+	<clipPath id="SVGID_2_">
+		<use xlink:href="#SVGID_1_"  style="overflow:visible;"/>
+	</clipPath>
+	<g class="st3">
+		<g>
+			<polyline class="st4" points="6,13 6,11 5,11 7,11 			"/>
+			<polyline class="st4" points="13,13 13,11 12,11 14,11 			"/>
+			<polyline class="st4" points="20,13 20,11 19,11 21,11 			"/>
+			<polyline class="st4" points="27,13 27,11 26,11 28,11 			"/>
+			<polyline class="st4" points="34,13 34,11 33,11 35,11 			"/>
+			<polyline class="st4" points="41,13 41,11 40,11 42,11 			"/>
+			<polyline class="st4" points="48,13 48,11 47,11 49,11 			"/>
+			<polyline class="st4" points="55,13 55,11 54,11 56,11 			"/>
+			<polyline class="st4" points="62,13 62,11 61,11 63,11 			"/>
+			<polyline class="st4" points="69,13 69,11 68,11 70,11 			"/>
+			<polyline class="st4" points="76,13 76,11 75,11 77,11 			"/>
+			<polyline class="st4" points="83,13 83,11 82,11 84,11 			"/>
+			<polyline class="st4" points="90,13 90,11 89,11 91,11 			"/>
+			<polyline class="st4" points="97,13 97,11 96,11 98,11 			"/>
+		</g>
+	</g>
+</g>
+<g>
+	<line class="st2" x1="0" y1="6.5" x2="100" y2="6.5"/>
+	<g>
+		<line class="st5" x1="0" y1="6.5" x2="1" y2="6.5"/>
+		<line class="st6" x1="3" y1="6.5" x2="98" y2="6.5"/>
+		<line class="st5" x1="99" y1="6.5" x2="100" y2="6.5"/>
+	</g>
+</g>
+<path class="st7" d="M59.5-5"/>
+<g>
+	<rect x="69.5" y="1.5" class="st2" width="11" height="12"/>
+	<path class="st0" d="M80,2v11H70V2H80 M81,1H69v13h12V1z"/>
+</g>
+</svg>

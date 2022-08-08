@@ -21,7 +21,7 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
-let accessible_files = ["spin.png", "dropdown.js", "dropdown.css", "script.js", "style.css", "person.png", "car.png", "scene.png", "handle.png", "socket.io/socket.io.js", "fonts/Barlow-SemiBold.ttf"];
+let accessible_files = ["replay.png", "spin.png", "dropdown.js", "dropdown.css", "script.js", "style.css", "person.png", "car.png", "scene.png", "handle.png", "socket.io/socket.io.js", "fonts/Barlow-SemiBold.ttf"];
 accessible_files.map((file_name) => {
   app.get(`/${file_name}`, (req, res) => {
     res.sendFile(__dirname + `/${file_name}`);
@@ -51,14 +51,23 @@ io.on('connection', (socket) => {
         console.log('close');
         closed();
 
-        // Send graph placeholder
-        fs.readFile('graph.png', (err, data) => {
+        // Send graph placeholders
+        fs.readFile('graph_left.png', (err, data) => {
           if (err) {
             console.error(err);
             return;
           }
 
-          setTimeout(() => socket.emit("graph", data), 2000);
+          setTimeout(() => socket.emit("graph_left", data), 1000);
+        });
+
+        fs.readFile('graph_right.png', (err, data) => {
+          if (err) {
+            console.error(err);
+            return;
+          }
+
+          setTimeout(() => socket.emit("graph_right", data), 1000);
         });
       });
     });

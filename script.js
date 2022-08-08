@@ -4,6 +4,7 @@ let unit = 0;
 
 // References to text inputs
 let spinner;
+let replay_btn;
 let strat_dropdown;
 let car_input_x, car_input_y;
 let person_input_x, person_input_y;
@@ -20,13 +21,17 @@ window.addEventListener('load', () => {
     // Create socket connection with server
     socket = io();
     socket.on("path", animatePath);
-    socket.on("graph", displayGraph);
+    socket.on("graph_left", (data) => displayGraph(data, true));
+    socket.on("graph_right", (data) => displayGraph(data, false));
 
     // Get reference to the strategy selection dropdown from html
     strat_dropdown = document.body.querySelector(".strat-dropdown");
 
     // Get reference to the graph spinner
     spinner = document.body.querySelector(".spinner");
+
+    // Get reference to the replay button
+    replay_btn = document.body.querySelector(".replay");
 
     // Get references to the car's inputs from html
     let car_inputs = document.body.querySelectorAll('.pane.car .input');
@@ -132,8 +137,14 @@ window.addEventListener('load', () => {
     block.drawRect(0, 0, 300, 200);
     block.name = "block";
 
+    // Create graphics sprite for visibility line
+    line = new PIXI.Graphics();
+    line.position.set(0, 0);
+    line.name = "visibility_line";
+
     // Add all sprites to the Pixi stage
     app.stage.addChild(background);
+    app.stage.addChild(line);
     app.stage.addChild(person);
     app.stage.addChild(car);
     app.stage.addChild(block);
@@ -240,6 +251,33 @@ function adjustBlock() {
     block.height = diff_y;
 }
 
+/* Redraws the visibility line when the pedestrian or car have moved (generates dotted line) */
+function adjustVisibilityLine(visible) {
+    let car = app.stage.getChildByName("car");
+    let person = app.stage.getChildByName("person");
+    let line = app.stage.getChildByName("visibility_line");
+
+    let left_x = car.position.x + (unit * 2.8);
+    let left_y = car.position.y - (unit * .4);
+
+    let right_x = person.position.x;
+    let right_y = person.position.y;
+
+    let len = 10;
+    let dist = Math.sqrt(Math.pow(left_x - right_x, 2) + Math.pow(left_y - right_y, 2));
+    let segments = Math.ceil(dist / len) + 1;
+
+    let off_x = (right_x - left_x) / segments;
+    let off_y = (right_y - left_y) / segments;
+
+    line.clear();
+    for(let i = 0; i < segments; i += 2) {
+        line.lineStyle(2, visible ? 0x138c00 : 0x8c0010)
+            .moveTo(left_x + (off_x * i), left_y + (off_y * i))
+            .lineTo(left_x + (off_x * (i + 1)), left_y + (off_y * (i + 1)));
+    }
+}
+
 // Applies the value of the given text input to the Pixi scene
 function performChanges(inp) {
     // Gets reference to associated Pixi object defined by the input's data attribute data-obj="pixi_object" (eg. "person", "car")
@@ -319,6 +357,18 @@ function setLoadingVisibility(visible) {
 function setSpinnerVisibility(visible) {
     if (visible) spinner.style.display = "inline-block";
     else spinner.style.display = "none";
+}
+
+// Makes the replay button either fade in or disappear depending on the given boolean
+function setReplayVisibility(visible) {
+    if(visible) replay_btn.parentElement.style.display = "flex";
+    else replay_btn.parentElement.style.display = "none";
+}
+
+// Makes the replay button either greyed out or active depending on the given boolean
+function setReplayActive(active) {
+    if(active) replay_btn.classList.remove("disabled");
+    else replay_btn.classList.add("disabled");
 }
 
 // Enable or disable both html controls and draggable object in Pixi scene, depending on whether "active" is true or false
@@ -442,7 +492,9 @@ function cornerDragMove() {
 function animatePath(path) {
     console.log(path);
     setProgressScale(1.0, .5);
-    setTimeout(setLoadingVisibility.bind(this, false), 500);
+    setTimeout(() => {
+        setLoadingVisibility(false);
+    }, 500);
 
     let person = app.stage.getChildByName("person");
     let car = app.stage.getChildByName("car");
@@ -453,13 +505,19 @@ function animatePath(path) {
 
     const ticker = new PIXI.Ticker();
     ticker.stop();
+    replay_btn.addEventListener("click", () => {
+        setReplayActive(false);
+        ticker.start();
+    });
+    
+    
     let time = 0.0;
     ticker.add((delta) => {
         time += delta;
         // Set the speed the animation will run at (larger is slower)
-        if (time > 2) {
+        if (time > 5) {
             // Make animation play in a loop
-            path_ind = (path_ind + 1) % path_length;
+            path_ind++;
 
             // Update object positions
             car.x = parseInt(path["car_x"][path_ind]) * unit;
@@ -470,20 +528,30 @@ function animatePath(path) {
             // Show visibility status
             block.tint = (path["visibility"][path_ind] == "0" ? 0xFF0000 : 0x03adfc);
 
+            // Stretch the visibility line between the car and the person
+            adjustVisibilityLine(path["visibility"][path_ind] == "1");
+
             // Reset delay
             time = 0.0;
+
+            if(path_ind >= path_length - 1) {
+                ticker.stop();
+                path_ind = 0;
+                setReplayActive(true);
+                setReplayVisibility(true);
+            }
         }
     });
     ticker.start();
 }
 
 // Display the generated graph at the bottom of the page
-function displayGraph(graph) {
+function displayGraph(graph, left) {
     let blob = new Blob([graph], { type: 'image/png' });
     let url = URL.createObjectURL(blob);
     var img = new Image();
 
-    let canvas = document.body.querySelector(".graph");
+    let canvas = document.body.querySelector(left ? ".graph_left" : ".graph_right");
     let container = document.body.querySelector(".graph-container");
     img.addEventListener("load", () => {
         var ctx = canvas.getContext("2d");
@@ -495,7 +563,7 @@ function displayGraph(graph) {
     });
 
     setSpinnerVisibility(false);
-    container.style.display = "inline-block";
+    container.style.display = "flex";
 
     img.src = url;
 }
