@@ -8,14 +8,14 @@ import json
 # extract data from storm exported files
 Pfile = open("dtmcprops.json")
 Pfile = json.load(Pfile)
-Rfile = open("1dtmcprops.json")
-Rfile = json.load(Rfile)
+# Rfile = open("1dtmcprops.json")  #rewards not maintained anymore
+# Rfile = json.load(Rfile)
 Pminfile = open("1mdpprops.json")
 Pminfile = json.load(Pminfile)
 Pmaxfile = open("mdpprops.json")
 Pmaxfile = json.load(Pmaxfile)
-Rmaxfile = open("2mdpprops.json")
-Rmaxfile = json.load(Rmaxfile)
+# Rmaxfile = open("2mdpprops.json")
+# Rmaxfile = json.load(Rmaxfile)
 
 def getProbs(file):
     keys = []
@@ -32,13 +32,16 @@ df1 = pd.DataFrame(0, index=np.arange(len(Pfile)), columns=columns)
 for i in df1.index:
     # print(i)
     p = getProbs(Pfile)[i]
-    r = getProbs(Rfile)[i]
+    # r = getProbs(Rfile)[i]
+    r = 0  # r is maintained for backwards compatibility, not computed anymore
     pmin = getProbs(Pminfile)[i]
     pmax = getProbs(Pmaxfile)[i]
     rmin = 0
-    rmax = getProbs(Rmaxfile)[i]
+    # rmax = getProbs(Rmaxfile)[i]
+    rmax = 0 # r is maintained for backwards compatibility, not computed anymore
     df1.loc[i,:] = [pmin, pmax, p, rmin, rmax, r]
 
+df1.to_csv("temp/data.csv")
 # only use data until Pmax-Pmix < eps (data after this is useless)
 idx = df1.index[-1]
 eps = 0.01
