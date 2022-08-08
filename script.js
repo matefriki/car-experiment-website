@@ -60,13 +60,13 @@ window.addEventListener('load', () => {
     unit = canvas.clientWidth / 100;
 
     // Create sprite for background (road scene)
-    let background = PIXI.Sprite.from('scene.png');
+    let background = PIXI.Sprite.from('assets/scene.png');
     background.name = "background";
     background.width = app.screen.width;
     background.height = app.screen.height;
 
     // Create sprite for person
-    let person = PIXI.Sprite.from("person.png");
+    let person = PIXI.Sprite.from("assets/person.png");
     person.name = "person";
     person.interactive = true;
     person.buttonMode = true; // Changes cursor to button cursor when you hover over person
@@ -82,7 +82,7 @@ window.addEventListener('load', () => {
         .on('pointermove', personDragMove);
 
     // Create sprite for car
-    let car = PIXI.Sprite.from('car.png');
+    let car = PIXI.Sprite.from('assets/car.png');
     car.name = "car";
     car.interactive = true;
     car.buttonMode = true;
@@ -98,7 +98,7 @@ window.addEventListener('load', () => {
         .on('pointermove', carDragMove);
 
     // Create sprite for the bottom handle of the block
-    let bottom_corner = PIXI.Sprite.from('handle.png');
+    let bottom_corner = PIXI.Sprite.from('assets/handle.png');
     bottom_corner.name = "bottom_corner";
     bottom_corner.interactive = true;
     bottom_corner.buttonMode = true;
@@ -114,7 +114,7 @@ window.addEventListener('load', () => {
         .on('pointermove', cornerDragMove);
 
     // Create sprite for the top handle of the block
-    let top_corner = PIXI.Sprite.from('handle.png');
+    let top_corner = PIXI.Sprite.from('assets/handle.png');
     top_corner.name = "top_corner";
     top_corner.interactive = true;
     top_corner.buttonMode = true;
