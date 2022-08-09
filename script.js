@@ -187,6 +187,9 @@ window.addEventListener('load', () => {
         // Register click events for the random buttons
         randBtn.addEventListener('click', () => {
             inputs.forEach((inp) => {
+                // If input not randomizable then do nothing
+                if(!inp.classList.contains("randomizable")) return;
+                // Get object property that input edits
                 let prop = inp.dataset.prop;
                 // Parse the range for a given text input from the html
                 range = getInputRange(inp);
@@ -347,10 +350,10 @@ function setProgressScale(scale, seconds) {
 function setLoadingVisibility(visible) {
     let loadingPane = document.querySelector('.loading');
     if (visible) {
-        loadingPane.classList.remove("fully_hidden");
+        loadingPane.classList.remove("fully-hidden");
         loadingPane.style.display = "flex";
     }
-    else loadingPane.classList.add("fully_hidden");
+    else loadingPane.classList.add("fully-hidden");
 }
 
 // Makes the graph spinner either visible or fade away depending on the given boolean
@@ -376,8 +379,8 @@ function setControlsActive(active) {
     // Hide the randomize buttons and dropdowns with fade animation
     let randBtns = document.body.querySelectorAll('.random, .dropdown-component');
     randBtns.forEach((rand) => {
-        if (active) rand.classList.remove("hidden");
-        else rand.classList.add("hidden");
+        if (active) rand.classList.remove("fully-hidden");
+        else rand.classList.add("fully-hidden");
     });
 
     // Disable editing of text inputs, though they remain visible
@@ -392,6 +395,9 @@ function setControlsActive(active) {
         child.interactive = active;
         if (child.name.search("corner") > -1) child.visible = active;
     });
+
+    let vel_prop = document.body.querySelector(".property.car-velocity");
+    vel_prop.style.display = active ? "none" : "flex";
 }
 
 // Send the socket message with all the input states when the generate button is pressed
@@ -503,6 +509,8 @@ function animatePath(path) {
     let path_length = path["action"].length;
     let path_ind = 0;
 
+    let car_velocity = document.body.querySelector('.car-velocity .input');
+
     const ticker = new PIXI.Ticker();
     ticker.stop();
     replay_btn.addEventListener("click", () => {
@@ -519,11 +527,24 @@ function animatePath(path) {
             // Make animation play in a loop
             path_ind++;
 
+            // Read data from current position in path
+            let car_grid_x = parseInt(path["car_x"][path_ind]);
+            let car_grid_y = 5;
+            let person_grid_x = parseInt(path["ped_x"][path_ind]);
+            let person_grid_y = parseInt(path["ped_y"][path_ind]);
+
             // Update object positions
-            car.x = parseInt(path["car_x"][path_ind]) * unit;
-            car.y = (world_height - 5) * unit;
-            person.x = parseInt(path["ped_x"][path_ind]) * unit;
-            person.y = (world_height - parseInt(path["ped_y"][path_ind])) * unit;
+            car.x = car_grid_x * unit;
+            car.y = (world_height - car_grid_y) * unit;
+            person.x = person_grid_x * unit;
+            person.y = (world_height - person_grid_y) * unit;
+
+            // Update readouts
+            car_velocity.innerHTML = parseInt(path["car_v"][path_ind]);
+            car_input_x.innerHTML = car_grid_x;
+            car_input_y.innerHTML = car_grid_y;
+            person_input_x.innerHTML = person_grid_x;
+            person_input_y.innerHTML = person_grid_y;
 
             // Show visibility status
             block.tint = (path["visibility"][path_ind] == "0" ? 0xFF0000 : 0x03adfc);
