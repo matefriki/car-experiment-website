@@ -11,13 +11,13 @@ import strat_generator
 # Ranges for all state variables (inclusive) in order of input
 ranges = [
     (1, 300), # path_length
-    (50, 100), # person_x
+    (25, 75), # person_x
     (0, 15),  # person_y
-    (50, 100), # car_x
+    (25, 75), # car_x
     (5, 5),   # car_y
-    (50, 100), # top_corner_x
+    (25, 75), # top_corner_x
     (0, 15),  # top_corner_y
-    (50, 100), # bottom_corner_x
+    (25, 75), # bottom_corner_x
     (0, 15)   # bottom_corner_y
 ]
 

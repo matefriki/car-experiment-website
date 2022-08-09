@@ -1,10 +1,10 @@
 mdp
 
-const int street_length = 100;
-const int min_street_length = 50;
+const int street_length = 75;
+const int min_street_length = 25;
 const int sidewalk_height = 2;
 
-const int crosswalk_pos = 70;
+const int crosswalk_pos = 45;
 const int crosswalk_width = 10;
 const int crosswalk_height = 11;
 
@@ -24,9 +24,6 @@ const int block_y2 = sidewalk_height + block_height; //{top_corner_y}
 const int car_height = 2;
 const int car_width = 3;
 const int car_y = 5; // {car_y}
-
-// pedestrian properties
-const int min_ped_x = 0;
 
 global turn : [0..2] init 0;
 
@@ -107,7 +104,7 @@ seen_ped : [0..1] init 0;
 endmodule
 
 // formula move_xx_yy_zz = xx: (ped_x' = min(street_length, ped_x+1))&(turn'=0) + yy: (ped_y'=min(world_height, ped_y+1))&(turn'=0) + zz: (turn'=0);
-formula is_on_sidewalk = (ped_y <= sidewalk_height);
+formula is_on_sidewalk = (ped_y <= sidewalk_height) | (ped_y >= sidewalk_height + crosswalk_height);
 formula blocked_path = (ped_x >= block_x1) & (ped_x <= block_x2);
 formula on_crosswalk = (ped_x >= crosswalk_pos) & (ped_x <= crosswalk_pos+crosswalk_height);
 
