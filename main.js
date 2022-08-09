@@ -35,8 +35,9 @@ io.on('connection', (socket) => {
   console.log('a user connected');
   socket.on('generate', (strat_name, path_length, person_x, person_y, car_x, car_y, top_corner_x, top_corner_y, bottom_corner_x, bottom_corner_y) => {
     queue.push((closed) => {
-      const runner = spawn('python3', ['prism_runner.py'], { timeout: 50000 });
-      runner.stdin.write(`${strat_name} ${path_length} ${person_x} ${person_y} ${car_x} ${car_y} ${top_corner_x} ${top_corner_y} ${bottom_corner_x} ${bottom_corner_y}`);
+      const runner = spawn('python3', ['prism_runner.py', `${strat_name}`, `${path_length}`, `${person_x}`, `${person_y}`, `${car_x}`, `${car_y}`, `${top_corner_x}`, `${top_corner_y}`, `${bottom_corner_x}`, `${bottom_corner_y}`], { timeout: 50000 });
+      // const runner = spawn('python3', ['prism_runner.py'], { timeout: 50000 });
+      // runner.stdin.write(`${strat_name} ${path_length} ${person_x} ${person_y} ${car_x} ${car_y} ${top_corner_x} ${top_corner_y} ${bottom_corner_x} ${bottom_corner_y}`);
       runner.stdin.end();
 
       // Must have buffer because chunk size from python is smaller than full path (over path_length of 100)

@@ -8,6 +8,8 @@ import docker
 import strat_generator
 
 
+
+
 # Ranges for all state variables (inclusive) in order of input
 ranges = [
     (1, 300), # path_length
@@ -26,7 +28,9 @@ with open("config.txt", "r") as file:
     prism_path = file.read().strip()
 
 # Split arguments into array of strings
-starting_state = [arg for arg in input().split(" ") if arg]
+# starting_state = [arg for arg in input().split(" ") if arg]
+starting_state = [arg for arg in sys.argv[1:] if arg]
+# print(starting_state)
 
 # Ensure correct number of arguments
 if len(starting_state) != (len(ranges) + 1):
