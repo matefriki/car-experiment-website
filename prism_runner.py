@@ -1,11 +1,15 @@
 from asyncio import base_tasks
 from os import system, getcwd
+import re
 from time import sleep
 import os
 import json
 import sys
 import docker
+import pandas as pd, numpy as np
 import strat_generator
+import trace_convert
+import graph_generator
 
 
 # Ranges for all state variables (inclusive) in order of input
@@ -112,11 +116,44 @@ sleep(.1)
 path = load_path("temp/path.txt")
 print(json.dumps(path))
 
-system("python3 trace_convert.py")
+# system("python3 trace_convert.py")
+ordered_list_of_states = trace_convert.main()
 
 client = docker.from_env()
 
 client.containers.run("lposch/tempest-devel-traces:latest", "storm --prism mdpprogram.pm --prop prism_files/mdp_props.props --trace-input trace_input.txt --exportresult mdpprops.json --buildstateval", volumes = {os.getcwd(): {'bind': '/mnt/vol1', 'mode': 'rw'}}, working_dir = "/mnt/vol1", stderr = True)
 client.containers.run("lposch/tempest-devel-traces:latest", "storm --prism program.pm --prop prism_files/dtmc_props.props --trace-input trace_input.txt --exportresult dtmcprops.json --buildstateval", volumes = {os.getcwd(): {'bind': '/mnt/vol1', 'mode': 'rw'}}, working_dir = "/mnt/vol1", stderr = True)
 
-system("python3 graph_generator.py")
+names = ['dtmc','mdp','1mdp']
+pminmax = []*len(names)
+for name in names:
+    with open(f'{name}props.json',) as file:
+            trace = json.load(file)
+    probs = []*len(trace)
+    assert len(ordered_list_of_states) == len(trace), 'Arrays of different size'
+    for i in range(len(ordered_list_of_states)):
+        for j in range(len(trace)):
+            if ordered_list_of_states[i] == trace[j]['s']:
+                probs.append(trace[j]['v'])
+    pminmax.append(probs)
+
+columns = ['Pmin', 'Pmax', 'P', 'Rmin', 'Rmax', 'R']
+df1 = pd.DataFrame(0, index=np.arange(len(ordered_list_of_states)), columns=columns)
+for i in df1.index:
+        p = pminmax[0][i]
+        r = 0  # r is maintained for backwards compatibility, not computed anymore
+        pmin = pminmax[2][i]
+        pmax = pminmax[1][i]
+        rmin = 0
+        # rmax = getProbs(Rmaxfile)[i]
+        rmax = 0 # r is maintained for backwards compatibility, not computed anymore
+        df1.loc[i,:] = [pmin, pmax, p, rmin, rmax, r]
+# fill df with pmin pmax
+# for strat in set_of_strategies:
+#     make the program file program.pm
+#     client.containers.run("lposch/tempest-devel-traces:latest", "storm --prism program.pm --prop prism_files/dtmc_props.props --trace-input trace_input.txt --exportresult dtmcprops.json --buildstateval", volumes = {os.getcwd(): {'bind': '/mnt/vol1', 'mode': 'rw'}}, working_dir = "/mnt/vol1", stderr = True)    
+#     fill_df with p of the strategy
+
+
+graph_generator.main(df1)
+# system("python3 graph_generator.py")
