@@ -28,8 +28,8 @@ with open("config.txt", "r") as file:
     prism_path = file.read().strip()
 
 # Split arguments into array of strings
-# starting_state = [arg for arg in input().split(" ") if arg]
-starting_state = [arg for arg in sys.argv[1:] if arg]
+starting_state = [arg for arg in input().split(" ") if arg]
+# starting_state = [arg for arg in sys.argv[1:] if arg]
 # print(starting_state)
 
 # Ensure correct number of arguments
