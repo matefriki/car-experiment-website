@@ -6,6 +6,26 @@ label_reg = re.compile("\/\/\s*{([a-zA-Z_]+)}")
 strat_regex = "\[[\w-]+\]"
 strategies_label = re.compile(strat_regex)
 
+def nice_parenthesis(instring):
+    result = ""
+    currenttab = 0
+    for i in instring:
+        
+        if i == '(':
+            currenttab += 1
+            result += "(\n"
+            for j in range(currenttab):
+                result += "\t"
+        elif i == ')':
+            currenttab -= 1
+            result += "\n"
+            for j in range(currenttab):
+                result += "\t"
+            result += ")"
+        elif (i != ' ') and (i != '\n'):
+            result +=i
+    return result
+
 # generates runnable mdp file
 def make_mdp(temp):
     file = open(temp, "r")
@@ -53,7 +73,7 @@ def make_dtmc(temp):
             if strat_match:
                 for key in strategy[strat]:
                     if strat_match.group(0) == key: 
-                        lines[i] = re.sub(strat_regex, f"[] {strategy[strat][key]}  & ", lines[i]) 
+                        lines[i] = re.sub(strat_regex, f"[] {nice_parenthesis(strategy[strat][key])}  & ", lines[i]) 
         replaced = '\n'.join(lines)
         with open(f"temp/dtmc_{strat}.pm", "w") as f:
             f.write(replaced)
