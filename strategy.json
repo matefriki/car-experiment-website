@@ -18,6 +18,11 @@
         "[accelerate]": "(((seen_ped=0)) | ((seen_ped=1)&(visibility=0)&(!car_close_block)) | ((seen_ped=1)&(visibility=0)&(car_close_block)&(car_v < 2)) | ((seen_ped=1)&(visibility=1)&(is_on_sidewalk)&(!car_close_ped)) | ((seen_ped=1)&(visibility=1)&(is_on_sidewalk)&(car_close_ped)&(car_v < 2)))",
         "[brake]": "(((seen_ped=1)&(visibility=0)&(car_close_block)&(car_v > 2)) | ((seen_ped=1)&(visibility=1)&(!is_on_sidewalk)) | ((seen_ped=1)&(visibility=1)&(is_on_sidewalk)&(car_close_ped)&(car_v > 2)))",
         "[nop]": "(((seen_ped=1)&(visibility=0)&(car_close_block)&(car_v = 2)) | ((seen_ped=1)&(visibility=1)&(is_on_sidewalk)&(car_close_ped)&(car_v = 2)))"
+    },
+    "car4": {
+        "[accelerate]": "(((visibility=0)) | ((visibility=1)&(is_on_sidewalk)&(!car_close_ped)) | ((visibility=1)&(is_on_sidewalk)&(car_close_ped)&(car_v < 2)))",
+        "[brake]": "(((visibility=1)&(!is_on_sidewalk)) | ((visibility=1)&(is_on_sidewalk)&(car_close_ped)&(car_v > 2)))",
+        "[nop]": "(((visibility=1)&(is_on_sidewalk)&(car_close_ped)&(car_v = 2)))"
     }
 }
 

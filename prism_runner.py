@@ -159,5 +159,5 @@ for i in df1.index:
 #     fill_df with p of the strategy
 
 
-graph_generator.main(df1)
+graph_generator.main(df1, strat_name)
 # system("python3 graph_generator.py")

@@ -11,7 +11,7 @@ def getProbs(file):
     # print(len(keys))
     return keys
 
-def firstPlot(df, states, state_ticks, state_labels, idx=0):    
+def firstPlot(df, states, state_ticks, state_labels, idx=0, strat_name='strategy'):    
     # set up the plots
     fig, axs1 = plt.subplots(figsize = (7, 5))
     axs1.set_xlim(0,df.shape[0])
@@ -24,7 +24,7 @@ def firstPlot(df, states, state_ticks, state_labels, idx=0):
     axs1.plot(states, df['Pmax'], color = '#8d0000', marker = 'o', label = "Pmax", zorder=10, clip_on=False)
 
     # make a P line for each strategy chosen by user, new color, df will be new, new label
-    axs1.plot(states, df['P'], color = '#ca06b8', marker = 'o', label = "P", zorder=10, clip_on=False)
+    axs1.plot(states, df['P'], color = '#ca06b8', marker = 'o', label = strat_name, zorder=10, clip_on=False)
     axs1.vlines(idx,0,1)
     
     # labelling plot
@@ -40,7 +40,7 @@ def firstPlot(df, states, state_ticks, state_labels, idx=0):
     axs1.margins(0)
     plt.savefig("temp/graph_left.png")
 
-def secondPlot(df, states, state_ticks, state_labels, idx=0):    
+def secondPlot(df, states, state_ticks, state_labels, idx=0, strat_name='strategy'):    
     # set up the plots
     fig, axs2 = plt.subplots(figsize = (7, 5))
     axs2.set_xlim(0, df.shape[0])
@@ -72,7 +72,7 @@ def secondPlot(df, states, state_ticks, state_labels, idx=0):
     # axs2.margins(0)
     plt.savefig("temp/graph_right.png")
 
-def main(df1):
+def main(df1, strat_name = 'strategy'):
     df1.to_csv("temp/data.csv")
     # only use data until Pmax-Pmix < eps (data after this is useless)
     idx = df1.index[-1]
@@ -103,8 +103,8 @@ def main(df1):
     # plot styling
     plt.rcParams.update({'axes.labelsize' : 18, 'axes.titlesize': 18, 'font.family': 'serif'})
 
-    firstPlot(df, states, state_ticks, state_labels, idx)
-    secondPlot(df, states, state_ticks, state_labels, idx)
+    firstPlot(df, states, state_ticks, state_labels, idx, strat_name)
+    secondPlot(df, states, state_ticks, state_labels, idx, strat_name)
 
 if __name__ == "__main__":
     df = pd.read_csv('temp/data.csv')

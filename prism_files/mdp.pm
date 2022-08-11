@@ -71,7 +71,7 @@ formula car_close_block = ((car_x > block_x1 - 5) & (car_x < block_x2));
 formula car_close_ped = (ped_x - car_x < 2*car_v);
 
 module Car
-car_x : [min_street_length..street_length] init 55; //{car_x};
+car_x : [min_street_length..street_length] init 25; //{car_x};
 car_v : [0..max_speed] init 0;
 visibility : [0..1] init 1;
 finished : [0..1] init 0;
@@ -116,8 +116,10 @@ module Pedestrian
 
 	[] (turn = 2)&(!is_on_sidewalk) -> 0.7: (ped_y'=min(world_height, ped_y+1))&(turn'=0) + 0.3: (turn'=0);
 	
+//	[] (turn=2)&(is_on_sidewalk)&(blocked_path) ->	0.5: (ped_x' = min(street_length, ped_x+1))&(turn'=0) + 0.3: (ped_x' = max(0, ped_x-1))&(turn'=0) + 0.2: (turn'=0);
 	[] (turn=2)&(is_on_sidewalk)&(blocked_path) ->	0.8: (ped_x' = min(street_length, ped_x+1))&(turn'=0)  + 0.2: (turn'=0);
-	
+
+
 	[] (turn=2)&(is_on_sidewalk)&(!blocked_path)&(on_crosswalk) ->
 	0.45: (ped_x' = min(street_length, ped_x+1))&(turn'=0) + 0.45: (ped_y'=min(world_height, ped_y+1))&(turn'=0) + 0.1: (turn'=0);
 
