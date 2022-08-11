@@ -32,7 +32,7 @@ try:
 	with open("config.txt", "r") as file:
 	    prism_path = file.read().strip()
 except Exception as e:
-	sys.exit("Cannot open file config.txt, error: {e}, working dir = " + directory)
+	sys.exit("Cannot open file config.txt, error: {e}")
 
 # Split arguments into array of strings
 starting_state = [arg for arg in input().split(" ") if arg]
