@@ -5,6 +5,7 @@ import sys
 import os
 
 # set working directory - this is necessary on the server
+#os.chdir('/opt/car_experiment')
 
 # Ranges for all state variables (inclusive) in order of input
 ranges = [
