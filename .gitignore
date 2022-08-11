@@ -1,0 +1,14 @@
+.ipynb_checkpoints/*
+__pycache__/*
+*.ipynb
+config.txt
+node_modules/*
+temp/*
+program.pm
+mdpprogram.pm
+*mdpprops.json
+*dtmcprops.json
+dictdict.json
+generated.pm
+package-lock.json
+trace_input.txt

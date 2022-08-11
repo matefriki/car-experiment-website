@@ -6,6 +6,7 @@ A client-server web application that runs a simulation of a car and pedestrian i
 
 Requirements
   - Python 3
+  - pip install docker
   - Node JS
   - Node Package Manager
   - Prism Model Checker
