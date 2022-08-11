@@ -3,6 +3,9 @@ let app, socket;
 let unit = 0;
 
 // References to text inputs
+let spinner;
+let replay_btn;
+let strat_dropdown;
 let car_input_x, car_input_y;
 let person_input_x, person_input_y;
 let top_input_x, top_input_y, bottom_input_x, bottom_input_y;
@@ -18,6 +21,17 @@ window.addEventListener('load', () => {
     // Create socket connection with server
     socket = io();
     socket.on("path", animatePath);
+    socket.on("graph_left", (data) => displayGraph(data, true));
+    socket.on("graph_right", (data) => displayGraph(data, false));
+
+    // Get reference to the strategy selection dropdown from html
+    strat_dropdown = document.body.querySelector(".strat-dropdown");
+
+    // Get reference to the graph spinner
+    spinner = document.body.querySelector(".spinner");
+
+    // Get reference to the replay button
+    replay_btn = document.body.querySelector(".replay");
 
     // Get references to the car's inputs from html
     let car_inputs = document.body.querySelectorAll('.pane.car .input');
@@ -46,13 +60,13 @@ window.addEventListener('load', () => {
     unit = canvas.clientWidth / 100;
 
     // Create sprite for background (road scene)
-    let background = PIXI.Sprite.from('scene.png');
+    let background = PIXI.Sprite.from('assets/scene.png');
     background.name = "background";
     background.width = app.screen.width;
     background.height = app.screen.height;
 
     // Create sprite for person
-    let person = PIXI.Sprite.from("person.png");
+    let person = PIXI.Sprite.from("assets/person.png");
     person.name = "person";
     person.interactive = true;
     person.buttonMode = true; // Changes cursor to button cursor when you hover over person
@@ -68,7 +82,7 @@ window.addEventListener('load', () => {
         .on('pointermove', personDragMove);
 
     // Create sprite for car
-    let car = PIXI.Sprite.from('car.png');
+    let car = PIXI.Sprite.from('assets/car.png');
     car.name = "car";
     car.interactive = true;
     car.buttonMode = true;
@@ -84,7 +98,7 @@ window.addEventListener('load', () => {
         .on('pointermove', carDragMove);
 
     // Create sprite for the bottom handle of the block
-    let bottom_corner = PIXI.Sprite.from('handle.png');
+    let bottom_corner = PIXI.Sprite.from('assets/handle.png');
     bottom_corner.name = "bottom_corner";
     bottom_corner.interactive = true;
     bottom_corner.buttonMode = true;
@@ -100,7 +114,7 @@ window.addEventListener('load', () => {
         .on('pointermove', cornerDragMove);
 
     // Create sprite for the top handle of the block
-    let top_corner = PIXI.Sprite.from('handle.png');
+    let top_corner = PIXI.Sprite.from('assets/handle.png');
     top_corner.name = "top_corner";
     top_corner.interactive = true;
     top_corner.buttonMode = true;
@@ -123,8 +137,14 @@ window.addEventListener('load', () => {
     block.drawRect(0, 0, 300, 200);
     block.name = "block";
 
+    // Create graphics sprite for visibility line
+    line = new PIXI.Graphics();
+    line.position.set(0, 0);
+    line.name = "visibility_line";
+
     // Add all sprites to the Pixi stage
     app.stage.addChild(background);
+    app.stage.addChild(line);
     app.stage.addChild(person);
     app.stage.addChild(car);
     app.stage.addChild(block);
@@ -143,6 +163,9 @@ window.addEventListener('load', () => {
         let generatePane = document.querySelector('.generate');
         generatePane.style.display = "none";
         setLoadingVisibility(true);
+
+        // Show the graph spinner
+        setSpinnerVisibility(true);
 
         // Deactivate the UI controls
         setControlsActive(false);
@@ -164,6 +187,9 @@ window.addEventListener('load', () => {
         // Register click events for the random buttons
         randBtn.addEventListener('click', () => {
             inputs.forEach((inp) => {
+                // If input not randomizable then do nothing
+                if(!inp.classList.contains("randomizable")) return;
+                // Get object property that input edits
                 let prop = inp.dataset.prop;
                 // Parse the range for a given text input from the html
                 range = getInputRange(inp);
@@ -201,9 +227,9 @@ function forceBlur() {
 /* Parse the ranges (inclusive) found in the html that follow the format data-range="lower:upper"
    Returns an array of format [lower, upper] if the range is valid, otherwise null */
 function parseRange(rangeStr) {
-    if(!rangeStr) return null;
+    if (!rangeStr) return null;
     let range = rangeStr.split(':').map((x) => parseInt(x));
-    if(range.length != 2 || range.some((x) => isNaN(x))) return null;
+    if (range.length != 2 || range.some((x) => isNaN(x))) return null;
     return range;
 }
 
@@ -228,19 +254,46 @@ function adjustBlock() {
     block.height = diff_y;
 }
 
+/* Redraws the visibility line when the pedestrian or car have moved (generates dotted line) */
+function adjustVisibilityLine(visible) {
+    let car = app.stage.getChildByName("car");
+    let person = app.stage.getChildByName("person");
+    let line = app.stage.getChildByName("visibility_line");
+
+    let left_x = car.position.x + (unit * 2.8);
+    let left_y = car.position.y - (unit * .4);
+
+    let right_x = person.position.x;
+    let right_y = person.position.y;
+
+    let len = 10;
+    let dist = Math.sqrt(Math.pow(left_x - right_x, 2) + Math.pow(left_y - right_y, 2));
+    let segments = Math.ceil(dist / len) + 1;
+
+    let off_x = (right_x - left_x) / segments;
+    let off_y = (right_y - left_y) / segments;
+
+    line.clear();
+    for(let i = 0; i < segments; i += 2) {
+        line.lineStyle(2, visible ? 0x138c00 : 0x8c0010)
+            .moveTo(left_x + (off_x * i), left_y + (off_y * i))
+            .lineTo(left_x + (off_x * (i + 1)), left_y + (off_y * (i + 1)));
+    }
+}
+
 // Applies the value of the given text input to the Pixi scene
 function performChanges(inp) {
     // Gets reference to associated Pixi object defined by the input's data attribute data-obj="pixi_object" (eg. "person", "car")
     let obj_name = inp.dataset.obj;
-    if(!obj_name) return;
+    if (!obj_name) return;
     let obj = app.stage.getChildByName(obj_name);
     // Attempt to parse the input's value as an integer
     let value = parseInt(inp.innerHTML) * unit;
-    if(isNaN(value)) value = unit;
+    if (isNaN(value)) value = unit;
     // Pixi object property to change, defined by data-prop="object_property" (eg. "x", "y")
     let prop = inp.dataset.prop;
     // If changing y value then flip vertically
-    if(prop == "y") value = (world_height * unit) - value;
+    if (prop == "y") value = (world_height * unit) - value;
     /* Assign the parsed or default value to the desired Pixi object property
        if parse was unsuccessful then use default of 1 unit */
     obj[prop] = value;
@@ -296,26 +349,44 @@ function setProgressScale(scale, seconds) {
 // Makes the loading/progress bar pane either visible or fade away depending on the given boolean
 function setLoadingVisibility(visible) {
     let loadingPane = document.querySelector('.loading');
-    if(visible) {
-        loadingPane.classList.remove("fully_hidden");
+    if (visible) {
+        loadingPane.classList.remove("fully-hidden");
         loadingPane.style.display = "flex";
     }
-    else loadingPane.classList.add("fully_hidden");
+    else loadingPane.classList.add("fully-hidden");
+}
+
+// Makes the graph spinner either visible or fade away depending on the given boolean
+function setSpinnerVisibility(visible) {
+    if (visible) spinner.style.display = "inline-block";
+    else spinner.style.display = "none";
+}
+
+// Makes the replay button either fade in or disappear depending on the given boolean
+function setReplayVisibility(visible) {
+    if(visible) replay_btn.parentElement.style.display = "flex";
+    else replay_btn.parentElement.style.display = "none";
+}
+
+// Makes the replay button either greyed out or active depending on the given boolean
+function setReplayActive(active) {
+    if(active) replay_btn.classList.remove("disabled");
+    else replay_btn.classList.add("disabled");
 }
 
 // Enable or disable both html controls and draggable object in Pixi scene, depending on whether "active" is true or false
 function setControlsActive(active) {
-    // Hide the randomize buttons with fade animation
-    let randBtns = document.querySelectorAll('.random');
+    // Hide the randomize buttons and dropdowns with fade animation
+    let randBtns = document.body.querySelectorAll('.random, .dropdown-component');
     randBtns.forEach((rand) => {
-        if(active) rand.classList.remove("hidden");
-        else rand.classList.add("hidden");
+        if (active) rand.classList.remove("fully-hidden");
+        else rand.classList.add("fully-hidden");
     });
 
     // Disable editing of text inputs, though they remain visible
-    document.querySelectorAll('.controls .input').forEach((inp) => {
+    document.body.querySelectorAll('.controls .input').forEach((inp) => {
         inp.setAttribute("contenteditable", active ? "true" : "false");
-        if(active) inp.classList.add("editable");
+        if (active) inp.classList.add("editable");
         else inp.classList.remove("editable");
     });
 
@@ -324,6 +395,9 @@ function setControlsActive(active) {
         child.interactive = active;
         if (child.name.search("corner") > -1) child.visible = active;
     });
+
+    let vel_prop = document.body.querySelector(".property.car-velocity");
+    vel_prop.style.display = active ? "none" : "flex";
 }
 
 // Send the socket message with all the input states when the generate button is pressed
@@ -334,7 +408,7 @@ function sendGenerateMessage() {
 
     let bottom_point = [Math.min(...x_values), Math.min(...y_values)].map((n) => n.toString());
     let top_point = [Math.max(...x_values), Math.max(...y_values)].map((n) => n.toString());
-    socket.emit('generate', path_length.innerText, person_input_x.innerText, person_input_y.innerText, car_input_x.innerText, car_input_y.innerText, top_point[0], top_point[1], bottom_point[0], bottom_point[1]);
+    socket.emit('generate', strat_dropdown.dataset.value, path_length.innerText, person_input_x.innerText, person_input_y.innerText, car_input_x.innerText, car_input_y.innerText, top_point[0], top_point[1], bottom_point[0], bottom_point[1]);
 }
 
 // Handle beginning of drag event
@@ -361,13 +435,13 @@ function carDragMove() {
         let range_y = getInputRange(car_input_y);
         // Round mouse position to fit on grid, and clamp within world boundaries
         let grid_x = clamp(Math.round(new_x / unit), range_x[0], range_x[1]);
-        let grid_y = clamp(Math.round(new_y / unit), range_y[0], range_y[1]);
+        let grid_y = clamp(world_height - Math.round(new_y / unit), range_y[0], range_y[1]);
         // Resize grid coord by size of unit to get new position
         this.x = grid_x * unit;
-        this.y = grid_y * unit;
+        this.y = (world_height - grid_y) * unit;
         // Update text inputs with new position (reflected vertically)
         car_input_x.innerHTML = grid_x;
-        car_input_y.innerHTML = world_height - grid_y;
+        car_input_y.innerHTML = grid_y;
     }
 }
 
@@ -381,13 +455,13 @@ function personDragMove() {
         let range_y = getInputRange(person_input_y);
         // Round mouse position to fit on grid, and clamp within world boundaries
         let grid_x = clamp(Math.round(newPosition.x / unit), range_x[0], range_x[1]);
-        let grid_y = clamp(Math.round(newPosition.y / unit), range_y[0], range_y[1]);
+        let grid_y = clamp(world_height - Math.round(newPosition.y / unit), range_y[0], range_y[1]);
         // Resize grid coord by size of unit to get new position
         this.x = grid_x * unit;
-        this.y = grid_y * unit;
+        this.y = (world_height - grid_y) * unit;
         // Update text inputs with new position (reflected vertically)
         person_input_x.innerHTML = grid_x;
-        person_input_y.innerHTML = world_height - grid_y;
+        person_input_y.innerHTML = grid_y;
     }
 }
 
@@ -403,18 +477,18 @@ function cornerDragMove() {
         range_y = getInputRange(isTopCorner ? top_input_y : bottom_input_y);
         // Round mouse position to fit on grid, and clamp within world boundaries
         let grid_x = clamp(Math.round(newPosition.x / unit), range_x[0], range_x[1]);
-        let grid_y = clamp(Math.round(newPosition.y / unit), range_y[0], range_y[1]);
+        let grid_y = clamp(world_height - Math.round(newPosition.y / unit), range_y[0], range_y[1]);
         // Update the text inputs to reflect new position
-        if(this.name == "top_corner") {
+        if (this.name == "top_corner") {
             top_input_x.innerHTML = grid_x;
-            top_input_y.innerHTML = world_height - grid_y;
+            top_input_y.innerHTML = grid_y;
         } else {
             bottom_input_x.innerHTML = grid_x;
-            bottom_input_y.innerHTML = world_height - grid_y;
+            bottom_input_y.innerHTML = grid_y;
         }
         // Resize grid coord by size of unit to get new position
         this.x = grid_x * unit;
-        this.y = grid_y * unit;
+        this.y = (world_height - grid_y) * unit;
     }
     // Rescale and position filled rect of block to reflect new handle positions
     adjustBlock();
@@ -424,7 +498,9 @@ function cornerDragMove() {
 function animatePath(path) {
     console.log(path);
     setProgressScale(1.0, .5);
-    setTimeout(setLoadingVisibility.bind(this, false), 500);
+    setTimeout(() => {
+        setLoadingVisibility(false);
+    }, 500);
 
     let person = app.stage.getChildByName("person");
     let car = app.stage.getChildByName("car");
@@ -433,28 +509,82 @@ function animatePath(path) {
     let path_length = path["action"].length;
     let path_ind = 0;
 
+    let car_velocity = document.body.querySelector('.car-velocity .input');
+
     const ticker = new PIXI.Ticker();
     ticker.stop();
+    replay_btn.addEventListener("click", () => {
+        setReplayActive(false);
+        ticker.start();
+    });
+    
+    
     let time = 0.0;
     ticker.add((delta) => {
         time += delta;
         // Set the speed the animation will run at (larger is slower)
-        if(time > 2) {
+        if (time > 5) {
             // Make animation play in a loop
-            path_ind = (path_ind + 1) % path_length;
+            path_ind++;
+
+            // Read data from current position in path
+            let car_grid_x = parseInt(path["car_x"][path_ind]);
+            let car_grid_y = 5;
+            let person_grid_x = parseInt(path["ped_x"][path_ind]);
+            let person_grid_y = parseInt(path["ped_y"][path_ind]);
 
             // Update object positions
-            car.x = parseInt(path["car_x"][path_ind]) * unit;
-            car.y = (world_height - parseInt(path["car_y"][path_ind])) * unit;
-            person.x = parseInt(path["ped_x"][path_ind]) * unit;
-            person.y = (world_height - parseInt(path["ped_y"][path_ind])) * unit;
+            car.x = car_grid_x * unit;
+            car.y = (world_height - car_grid_y) * unit;
+            person.x = person_grid_x * unit;
+            person.y = (world_height - person_grid_y) * unit;
+
+            // Update readouts
+            car_velocity.innerHTML = parseInt(path["car_v"][path_ind]);
+            car_input_x.innerHTML = car_grid_x;
+            car_input_y.innerHTML = car_grid_y;
+            person_input_x.innerHTML = person_grid_x;
+            person_input_y.innerHTML = person_grid_y;
 
             // Show visibility status
             block.tint = (path["visibility"][path_ind] == "0" ? 0xFF0000 : 0x03adfc);
 
+            // Stretch the visibility line between the car and the person
+            adjustVisibilityLine(path["visibility"][path_ind] == "1");
+
             // Reset delay
             time = 0.0;
+
+            if(path_ind >= path_length - 1) {
+                ticker.stop();
+                path_ind = 0;
+                setReplayActive(true);
+                setReplayVisibility(true);
+            }
         }
     });
     ticker.start();
+}
+
+// Display the generated graph at the bottom of the page
+function displayGraph(graph, left) {
+    let blob = new Blob([graph], { type: 'image/png' });
+    let url = URL.createObjectURL(blob);
+    var img = new Image();
+
+    let canvas = document.body.querySelector(left ? ".graph_left" : ".graph_right");
+    let container = document.body.querySelector(".graph-container");
+    img.addEventListener("load", () => {
+        var ctx = canvas.getContext("2d");
+        let ratio = 25 / 35;
+        let width = 1000;
+        canvas.width = width;
+        canvas.height = width * ratio;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    });
+
+    setSpinnerVisibility(false);
+    container.style.display = "flex";
+
+    img.src = url;
 }
