@@ -11,9 +11,9 @@ def getProbs(file):
     # print(len(keys))
     return keys
 
-def firstPlot(df, states, state_ticks, state_labels):    
+def firstPlot(df, states, state_ticks, state_labels, idx=0):    
     # set up the plots
-    fig, axs1 = plt.subplots(figsize = (20, 8))
+    fig, axs1 = plt.subplots(figsize = (7, 5))
     axs1.set_xlim(0,df.shape[0])
     for spine in ['right', 'top']:
         axs1.spines[spine].set_visible(False)
@@ -25,13 +25,14 @@ def firstPlot(df, states, state_ticks, state_labels):
 
     # make a P line for each strategy chosen by user, new color, df will be new, new label
     axs1.plot(states, df['P'], color = '#ca06b8', marker = 'o', label = "P", zorder=10, clip_on=False)
+    axs1.vlines(idx,0,1)
     
     # labelling plot
     axs1.legend()
     axs1.set_xlabel('States')
     plt.xticks(state_ticks, state_labels)
     axs1.set_ylabel('Probability')
-    plt.yticks([0.5, 1.0], ['0.5', '1.0'])
+    plt.yticks([0, 0.5, 1.0], ['0','0.5', '1.0'])
     axs1.set_title('le titre')
     axs1.plot(1, 0, ">k", transform=axs1.get_yaxis_transform(), clip_on=False)
     
@@ -39,9 +40,9 @@ def firstPlot(df, states, state_ticks, state_labels):
     axs1.margins(0)
     plt.savefig("temp/graph_left.png")
 
-def secondPlot(df, states, state_ticks, state_labels):    
+def secondPlot(df, states, state_ticks, state_labels, idx=0):    
     # set up the plots
-    fig, axs2 = plt.subplots(figsize = (20, 8))
+    fig, axs2 = plt.subplots(figsize = (7, 5))
     axs2.set_xlim(0, df.shape[0])
     for spine in ['right', 'top']:
         axs2.spines[spine].set_visible(False)
@@ -57,17 +58,18 @@ def secondPlot(df, states, state_ticks, state_labels):
     axs2.plot(states, ro1, color = '#ca06b8', marker = 'o', label = "rho1", zorder=10, clip_on=False)
     axs2.axhline(y = ro1.mean(), color = '#ca06b8', linestyle = '--', label = "rho1 Mean")
     axs2.bar(states, roDiff, roDiffWidth, color = '#DBDBDB', edgecolor = '#BFBFBF')
+    axs2.axvline(x = idx)
     axs2.legend()
 
     # labelling the plot
     axs2.set_xlabel('States')
     plt.xticks(state_ticks, state_labels)
     axs2.set_ylabel('Probability')
-    plt.yticks([0.5, 1.0], ['0.5', '1.0'])
+    plt.yticks([0,0.5, 1.0], ['0','0.5', '1.0'])
     axs2.plot(1, 0, ">k", transform=axs2.get_yaxis_transform(), clip_on=False)
     axs2.set_title('le titre')
         
-    axs2.margins(0)
+    # axs2.margins(0)
     plt.savefig("temp/graph_right.png")
 
 def main(df1):
@@ -82,7 +84,11 @@ def main(df1):
             idx = idx -1 
         else:
             break
-    df = df1[0:idx]
+    # df = df1[0:idx]
+    if idx + 3 < df1.index[-1]:
+        df = df1[0:idx+3]
+    else:
+        df = df1 
     # both graphs will plot to the same state tick
     state_labels = []
     states = []
@@ -97,8 +103,9 @@ def main(df1):
     # plot styling
     plt.rcParams.update({'axes.labelsize' : 18, 'axes.titlesize': 18, 'font.family': 'serif'})
 
-    firstPlot(df, states, state_ticks, state_labels)
-    secondPlot(df, states, state_ticks, state_labels)
+    firstPlot(df, states, state_ticks, state_labels, idx)
+    secondPlot(df, states, state_ticks, state_labels, idx)
 
 if __name__ == "__main__":
-    main()
+    df = pd.read_csv('temp/data.csv')
+    main(df)
