@@ -18,6 +18,7 @@ function getPrismPath() {
 }
 
 app.get('/', (req, res) => {
+  emitLog(`Serving page (${req.ip})`);
   res.sendFile(__dirname + '/index.html');
 });
 
@@ -32,8 +33,9 @@ let queue = [];
 let running = false;
 
 io.on('connection', (socket) => {
-  console.log('a user connected');
+  emitLog(`User connected to socket (${socket.conn.request.socket.remoteAddress}) (${socket.id})`);
   socket.on('generate', (strat_name, path_length, person_x, person_y, car_x, car_y, top_corner_x, top_corner_y, bottom_corner_x, bottom_corner_y) => {
+    emitLog(`Generate received with args: ${[strat_name, path_length, person_x, person_y, car_x, car_y, top_corner_x, top_corner_y, bottom_corner_x, bottom_corner_y].join(' ')}`);
     queue.push((closed) => {
       // const runner = spawn('python3', ['prism_runner.py', `${strat_name}`, `${path_length}`, `${person_x}`, `${person_y}`, `${car_x}`, `${car_y}`, `${top_corner_x}`, `${top_corner_y}`, `${bottom_corner_x}`, `${bottom_corner_y}`], { timeout: 50000 });
       const runner = spawn('python3', ['prism_runner.py'], { timeout: 50000 });
@@ -44,22 +46,21 @@ io.on('connection', (socket) => {
       let buffer = "";
       runner.stdout.on('data', (data) => {
         buffer += data.toString();
-        console.log("data");
       });
 
-      runner.on('close', () => {
+      runner.on('close', (code) => {
+        emitLog(`Runner finished with code: ${code}. Sending trace and generated graphs`)
+
         socket.emit("path", buffer);
-        console.log('close');
         closed();
 
-        // Send graph placeholders
         fs.readFile('temp/graph_left.png', (err, data) => {
           if (err) {
             console.error(err);
             return;
           }
 
-          setTimeout(() => socket.emit("graph_left", data), 1000);
+          setTimeout(() => socket.emit("graph_left", data), 500);
         });
 
         fs.readFile('temp/graph_right.png', (err, data) => {
@@ -68,18 +69,22 @@ io.on('connection', (socket) => {
             return;
           }
 
-          setTimeout(() => socket.emit("graph_right", data), 1000);
+          setTimeout(() => socket.emit("graph_right", data), 500);
         });
       });
     });
 
     handleQueue();
   });
+
+  socket.on("disconnect", () => {
+    emitLog(`User disconnected from socket (${socket.conn.request.socket.remoteAddress}) (${socket.id})`);
+  });
 });
 
 function handleQueue() {
   if (queue.length == 0 || running) return;
-  console.log(`Handling queue, length: ${queue.length}`);
+  emitLog(`Handling queue. Current length: ${queue.length}`);
   running = true;
   let currRequest = queue.shift();
   currRequest(() => {
@@ -89,5 +94,9 @@ function handleQueue() {
 }
 
 server.listen(8000, () => {
-  console.log('listening on *:8000');
+  emitLog('Server started, listening on *:8000');
 });
+
+function emitLog(msg) {
+  console.log(`[${(new Date()).toLocaleTimeString()}] ${msg}`);
+}
