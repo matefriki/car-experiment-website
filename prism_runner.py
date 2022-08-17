@@ -136,6 +136,8 @@ pminmax = []*len(names)
 for name in names:
     with open(f'{name}props.json',) as file:
             trace = json.load(file)
+    if not trace:
+        sys.exit("JSON load error: can't load props (likely trace too short)")
     probs = []*len(trace)
     assert len(ordered_list_of_states) == len(trace), 'Arrays of different size'
     for i in range(len(ordered_list_of_states)):
