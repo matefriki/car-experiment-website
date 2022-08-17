@@ -1,0 +1,37 @@
+.bullet {
+    font-family: "Barlow";
+    display: flex;
+    flex-direction: column;
+    color: #3498db;
+}
+
+.bullet .item {
+    padding: 5px;
+    font-size: 16px;
+    height: 20px;
+    line-height: 20px;
+}
+
+.bullet .box {
+    width: 10px;
+    height: 10px;
+    margin: 5px 8px 5px 5px;
+    float: left;
+    outline: 2px solid #3498db;
+    cursor: pointer;
+    background: black;
+}
+
+.bullet .box.selected {
+    background: #3498db;
+}
+
+.bullet .label {
+    float: left;
+    cursor: pointer;
+}
+
+.bullet .label.selected {
+    font-weight: bolder;
+    text-decoration: underline;
+}
