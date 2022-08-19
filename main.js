@@ -43,7 +43,7 @@ io.on('connection', (socket) => {
       console.log('get input parameters: ', path_length, person_x, person_y, car_x, car_y, top_corner_x, top_corner_y, bottom_corner_x, bottom_corner_y)
 
       // const runner = spawn('python3', ['prism_runner.py', `${strat_name}`, `${path_length}`, `${person_x}`, `${person_y}`, `${car_x}`, `${car_y}`, `${top_corner_x}`, `${top_corner_y}`, `${bottom_corner_x}`, `${bottom_corner_y}`], { timeout: 50000 });
-      const runner = spawn('python3', ['prism_runner.py'], { timeout: 50000 });
+      const runner = spawn('python3', [__dirname + '/prism_runner.py'], { timeout: 50000 });
       runner.stdin.write(`${strat_name} ${path_length} ${person_x} ${person_y} ${car_x} ${car_y} ${top_corner_x} ${top_corner_y} ${bottom_corner_x} ${bottom_corner_y}`);
       runner.stdin.end();
 
@@ -75,7 +75,7 @@ io.on('connection', (socket) => {
         closed();
 
         // Send graph placeholders
-        fs.readFile('temp/graph_left.png', (err, data) => {
+        fs.readFile(__dirname + '/temp/graph_left.png', (err, data) => {
           console.log(`send left graph placeholder`)
           if (err) {
             console.error(err);
@@ -84,7 +84,7 @@ io.on('connection', (socket) => {
           setTimeout(() => socket.emit("graph_left", data), 1000);
         });
 
-        fs.readFile('temp/graph_right.png', (err, data) => {
+        fs.readFile(__dirname + '/temp/graph_right.png', (err, data) => {
           console.log(`send right graph placeholder`)
           if (err) {
             console.error(err);
