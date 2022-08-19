@@ -76,20 +76,20 @@ io.on('connection', (socket) => {
 
         // Send graph placeholders
         fs.readFile('temp/graph_left.png', (err, data) => {
+          console.log(`send left graph placeholder`)
           if (err) {
             console.error(err);
             return;
           }
-
           setTimeout(() => socket.emit("graph_left", data), 1000);
         });
 
         fs.readFile('temp/graph_right.png', (err, data) => {
+          console.log(`send right graph placeholder`)
           if (err) {
             console.error(err);
             return;
           }
-
           setTimeout(() => socket.emit("graph_right", data), 1000);
         });
       });
@@ -97,9 +97,7 @@ io.on('connection', (socket) => {
       runner.on('exit', (code) => {
 				console.log(`prism runner: exited with code ${code}`);
 			});
-
     });
-
     handleQueue();
   });
 });

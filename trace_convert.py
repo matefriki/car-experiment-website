@@ -41,15 +41,13 @@ def main():
                 arr.append([f"{key}={dict[key][j-1]}" for key in dict])
                 # trace_dict.update([dict[key] for key in dict])
 
-
     for i,input in enumerate(arr):
         for j,str in enumerate(input):
             lines[i] += f"{str}"
             if j != len(arr[i]) - 1:
                 lines[i] += " & "
 
-
-    replaced = '\n'.join(lines)
+    replaced = '\n'.join([line for line in lines if line])
     with open("trace_input.txt", "w") as f:
         f.write(replaced)
     # slicing("trace_input.txt")
@@ -58,18 +56,17 @@ def main():
     file.close()
 
     arr = []*len(lines)
-    for j,line in enumerate(lines):
-        if line != "":
+    for line in lines:
+        if line != '':
             element = line.split(' & ')
             dictionary = {}
             for i in range(len(element)):
                 (k, value) = element[i].split('=')
                 dictionary[k] = int(value)
+            #print(f"append {dictionary}")
             arr.append(dictionary)
 
     return arr
-
-
 
 if __name__ == "__main__":
     main()

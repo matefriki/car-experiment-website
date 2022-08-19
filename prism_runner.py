@@ -32,7 +32,7 @@ try:
 	with open("config.txt", "r") as file:
 	    prism_path = file.read().strip()
 except Exception as e:
-	sys.exit("Cannot open file config.txt, error: {e}")
+	sys.exit(f"Cannot open file config.txt, error: {e}")
 
 # Split arguments into array of strings
 starting_state = [arg for arg in input().split(" ") if arg]
@@ -41,15 +41,15 @@ starting_state = [arg for arg in input().split(" ") if arg]
 
 # Ensure correct number of arguments
 if len(starting_state) != (len(ranges) + 1):
-    sys.exit("Invalid input: incorrect number of args")
+    sys.exit(f"Invalid input: incorrect number of args")
 
 # Ensure numerical arguments aren't bigger than reasonable length (10)
 if any([len(arg) > 10 for arg in starting_state[1:]]):
-    sys.exit("Invalid input: argument too big")
+    sys.exit(f"Invalid input: argument too big")
 
 # Ensure all numerical arguments contain only valid characters (positive integers)
 if not all([num.isnumeric() for num in starting_state[1:]]):
-    sys.exit("Invalid input: not all positive integers")
+    sys.exit(f"Invalid input: not all positive integers")
 
 # Parse numerical arguments to integers
 try:
@@ -62,7 +62,7 @@ except Exception as e:
 def within_range(num, range):
     return num >= range[0] and num <= range[1]
 if not all([within_range(arg, ranges[i]) for i, arg in enumerate(starting_state[1:])]):
-    sys.exit("Invalid input: argument out of range")
+    sys.exit(f"Invalid input: argument out of range")
 
 strat_name, path_length, person_x, person_y, car_x, car_y, top_corner_x, top_corner_y, bottom_corner_x, bottom_corner_y = starting_state
 
@@ -78,7 +78,7 @@ strat_files = {
     "car4":"temp/dtmc_car4.pm"
 }
 if strat_name not in strat_files:
-    sys.exit("Invalid input: strategy does not exist")
+    sys.exit(f"Invalid input: strategy does not exist")
 
 # check if mpggenerated is there. If not, creates it in temp folder, along with dtmc files
 path_to_generated_mdp = "temp/mdpgenerated.pm"
@@ -93,7 +93,7 @@ try:
 	with open("program.pm", "w") as file:
 		file.write(program)
 except Exception as e:
-	sys.exit("Cannot open file program.pm, error: {e}")
+	sys.exit(f"Cannot open file program.pm, error: {e}")
 sleep(.1)
 
 # writes mdp program to run in storm, if file did not exist before, creates it from mpd.pm
@@ -128,26 +128,35 @@ sleep(.1)
 path = load_path("temp/path.txt")
 print(json.dumps(path))
 
-
 # system("python3 trace_convert.py")
 ordered_list_of_states = trace_convert.main()
+#client = docker.from_env()
 
-client = docker.from_env()
+#print("run storm with mdp_props.props")
+system("storm --prism mdpprogram.pm --prop prism_files/mdp_props.props --trace-input trace_input.txt --exportresult mdpprops.json --buildstateval >/dev/null 2>&1")
+#print("run storm with dtmc_props.props")
+system("storm --prism program.pm --prop prism_files/dtmc_props.props --trace-input trace_input.txt --exportresult dtmcprops.json --buildstateval >/dev/null 2>&1")
 
-client.containers.run("lposch/tempest-devel-traces:latest", "storm --prism mdpprogram.pm --prop prism_files/mdp_props.props --trace-input trace_input.txt --exportresult mdpprops.json --buildstateval", volumes = {os.getcwd(): {'bind': '/mnt/vol1', 'mode': 'rw'}}, working_dir = "/mnt/vol1", stderr = True)
-client.containers.run("lposch/tempest-devel-traces:latest", "storm --prism program.pm --prop prism_files/dtmc_props.props --trace-input trace_input.txt --exportresult dtmcprops.json --buildstateval", volumes = {os.getcwd(): {'bind': '/mnt/vol1', 'mode': 'rw'}}, working_dir = "/mnt/vol1", stderr = True)
+#client.containers.run("lposch/tempest-devel-traces:latest", "storm --prism mdpprogram.pm --prop prism_files/mdp_props.props --trace-input trace_input.txt --exportresult mdpprops.json --buildstateval", volumes = {os.getcwd(): {'bind': '/mnt/vol1', 'mode': 'rw'}}, working_dir = "/mnt/vol1", stderr = True)
+#client.containers.run("lposch/tempest-devel-traces:latest", "storm --prism program.pm --prop prism_files/dtmc_props.props --trace-input trace_input.txt --exportresult dtmcprops.json --buildstateval", volumes = {os.getcwd(): {'bind': '/mnt/vol1', 'mode': 'rw'}}, working_dir = "/mnt/vol1", stderr = True)
 
 names = ['dtmc','mdp','1mdp']
 pminmax = []*len(names)
 for name in names:
     with open(f'{name}props.json',) as file:
-            trace = json.load(file)
+        trace = json.load(file)
+        #print(f'load trace for {name}props.json')
+        #print(f"load trace: {trace}")
     probs = []*len(trace)
-    assert len(ordered_list_of_states) == len(trace), 'Arrays of different size'
+    #assert len(ordered_list_of_states) == len(trace), 'Arrays of different size'
     for i in range(len(ordered_list_of_states)):
         for j in range(len(trace)):
             if ordered_list_of_states[i] == trace[j]['s']:
                 probs.append(trace[j]['v'])
+                break
+            elif j == len(trace)-1:
+                sys.exit(f"Cannot find state {ordered_list_of_states[i]}")
+    assert len(ordered_list_of_states) == len(probs), 'Arrays of different size'
     pminmax.append(probs)
 
 columns = ['Pmin', 'Pmax', 'P', 'Rmin', 'Rmax', 'R']
