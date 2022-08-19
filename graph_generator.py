@@ -1,5 +1,8 @@
 import pandas as pd
 import numpy as np
+# set MPLCONFIGDIR - this is necessary on the server
+#import os
+#os.environ['MPLCONFIGDIR'] = "/opt/car_experiment/configs/"
 from matplotlib import rc
 from matplotlib import pyplot as plt
 import json
