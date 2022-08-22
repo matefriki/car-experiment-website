@@ -1,1 +1,1 @@
-/Users/nick/Documents/Programming/Graz/filip/neurips/prism/prism/bin/prism
+/home/fcano/IAIKCloud/IAIKprojects/Accountability/prism-4.7-linux64/bin/prism
