@@ -3,9 +3,10 @@ const app = express();
 
 const http = require('http');
 const server = http.createServer(app);
-
 const { Server } = require("socket.io");
 const io = new Server(server);
+const PIXI = require('pixi.js');
+
 
 const fs = require('fs');
 const { spawn } = require('child_process');
@@ -13,19 +14,48 @@ const e = require('express');
 
 function getPrismPath() {
   var path = process.cwd();
-  var buffer = fs.readFileSync(path + "/config.txt");
+  var buffer = fs.readFileSync(__dirname + "/config.txt");
   return buffer.toString()
 }
 
-app.get('/info', (req, res) => {
-  res.send('Crosswalk');
-});
+app.set('view engine', 'ejs');
+
+app.use('/js', express.static(__dirname + '/node_modules/bootstrap/dist/js'));
+app.use('/css', express.static(__dirname + '/node_modules/bootstrap/dist/css'));
+app.use('/pixi', express.static(__dirname + '/node_modules/pixi.js/dist/cjs'));
+app.use('/socket.io', express.static(__dirname + '/node_modules/socket.io/client-dist'));
+app.use('/assets', express.static(__dirname + '/assets'));
+app.use('/public', express.static(__dirname + '/public'));
+app.use('/source', express.static(__dirname + '/source'));
+app.use('/fonts', express.static(__dirname + '/fonts'));
+app.use('/', express.static(__dirname + '/'));
+
 
 app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/index.html');
+  res.render(__dirname + '/pages/index.ejs');
 });
 
-let accessible_files = ["assets/replay.png", "assets/spin.png", "dropdown.js", "dropdown.css", "script.js", "style.css", "assets/person.png", "assets/car.png", "assets/scene.png", "assets/handle.png", "socket.io/socket.io.js", "fonts/Barlow-SemiBold.ttf"];
+app.get('/about', (req, res) => {
+  res.render(__dirname + '/pages/about.ejs');
+});
+
+app.get('/app', (req, res) => {
+  res.render(__dirname + '/pages/app.ejs');
+});
+
+app.get('/code', (req, res) => {
+  res.render(__dirname + '/pages/code.ejs');
+});
+
+app.get('/paper', (req, res) => {
+  res.render(__dirname + '/pages/paper.ejs');
+});
+
+app.get('*', (req, res) => {
+  res.status(404).render(__dirname + '/pages/404.ejs');
+});
+
+let accessible_files = ["assets/replay.png", "assets/spin.png", "public/js/dropdown.js", "public/css/dropdown.css", "script.js", "public/css/style.css", "assets/person.png", "assets/car.png", "assets/scene.png", "assets/handle.png", "socket.io/socket.io.js", "fonts/Barlow-SemiBold.ttf"];
 accessible_files.map((file_name) => {
   app.get(`/${file_name}`, (req, res) => {
     res.sendFile(__dirname + `/${file_name}`);
@@ -113,6 +143,6 @@ function handleQueue() {
   });
 }
 
-server.listen(8000, () => {
+app.listen(8000, () => {
   console.log('listening on *:8000');
 });
