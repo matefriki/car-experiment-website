@@ -13,7 +13,6 @@ import graph_generator
 import pickle
 
 
-
 # Ranges for all state variables (inclusive) in order of input
 ranges = [
     (1, 300), # path_length
@@ -61,9 +60,10 @@ def within_range(num, range):
 if not all([within_range(arg, ranges[i]) for i, arg in enumerate(starting_state[1:])]):
     sys.exit("Invalid input: argument out of range")
 
-strat_name, path_length, person_x, person_y, car_x, car_y, top_corner_x, top_corner_y, bottom_corner_x, bottom_corner_y = starting_state
+strategies, path_length, person_x, person_y, car_x, car_y, top_corner_x, top_corner_y, bottom_corner_x, bottom_corner_y = starting_state
 
 # Ensure strat_name is in list of available options
+
 strat_files = {
     "cautious": "temp/dtmc_cautious.pm",
     "normal": "temp/dtmc_normal.pm",
@@ -73,15 +73,21 @@ strat_files = {
     "car3":"temp/dtmc_car3.pm",
     "car4":"temp/dtmc_car4.pm"
 }
-if strat_name not in strat_files:
-    sys.exit("Invalid input: strategy does not exist")
+
+strat_list = strategies.split(",")
+if len(strat_list) == 0:
+    sys.exit("Invalid input: no strategies provided")
+
+for name in strat_list:
+    if name not in strat_files:
+        sys.exit("Invalid input: strategy does not exist")
 
 # check if mpggenerated is there. If not, creates it in temp folder, along with dtmc files
 path_to_generated_mdp = "temp/mdpgenerated.pm"
 if not os.path.exists(path_to_generated_mdp):
     strat_generator.main("prism_files/mdp.pm")
 
-with open(strat_files[strat_name], "r") as file:
+with open(strat_files[strat_list[0]], "r") as file:
     template = file.read()
 
 program = template.format(person_x = person_x, person_y = person_y, car_x = car_x, car_y = car_y, top_corner_x = top_corner_x, top_corner_y = top_corner_y,  bottom_corner_x = bottom_corner_x, bottom_corner_y = bottom_corner_y)
@@ -132,6 +138,8 @@ pminmax = []*len(names)
 for name in names:
     with open(f'{name}props.json',) as file:
             trace = json.load(file)
+    if not trace:
+        sys.exit("JSON load error: can't load props (likely trace too short)")
     probs = []*len(trace)
     file = open('trace', 'wb')
     pickle.dump(trace, file)
@@ -183,5 +191,5 @@ for i in df1.index:
 #     fill_df with p of the strategy
 
 
-graph_generator.main(df1, strat_name)
+graph_generator.main(df1, strat_list[0])
 # system("python3 graph_generator.py")

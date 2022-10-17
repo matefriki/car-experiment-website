@@ -177,8 +177,9 @@ body {
 }
 
 .fully-hidden {
-    animation: full_hide .2s !important;
-    animation-fill-mode: forwards !important;
+    display: none !important;
+    /* animation: full_hide .2s !important;
+    animation-fill-mode: forwards !important*/
 }
 
 .editable:hover {
@@ -313,8 +314,9 @@ body {
 }
 
 .replay-pane {
-    flex-direction: column;
+    flex-direction: row;
     justify-content: center;
+    align-items: center;
     display: none;
     flex-grow: 1;
     display: none;
