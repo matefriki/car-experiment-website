@@ -10,6 +10,8 @@ import pandas as pd, numpy as np
 import strat_generator
 import trace_convert
 import graph_generator
+import pickle
+
 
 # Ranges for all state variables (inclusive) in order of input
 ranges = [
@@ -60,8 +62,8 @@ if not all([within_range(arg, ranges[i]) for i, arg in enumerate(starting_state[
 
 strategies, path_length, person_x, person_y, car_x, car_y, top_corner_x, top_corner_y, bottom_corner_x, bottom_corner_y = starting_state
 
+# Ensure strat_name is in list of available options
 
-# Ensure strategies is in list of available options
 strat_files = {
     "cautious": "temp/dtmc_cautious.pm",
     "normal": "temp/dtmc_normal.pm",
@@ -139,7 +141,32 @@ for name in names:
     if not trace:
         sys.exit("JSON load error: can't load props (likely trace too short)")
     probs = []*len(trace)
-    assert len(ordered_list_of_states) == len(trace), 'Arrays of different size'
+    file = open('trace', 'wb')
+    pickle.dump(trace, file)
+    file.close()
+    file = open('ordered_list_of_states', 'wb')
+    pickle.dump(ordered_list_of_states, file)
+    file.close()
+    # check for repeated states
+    number_of_repeated_states = 0
+    for i in range(1,len(ordered_list_of_states)):
+        if ordered_list_of_states[i] == ordered_list_of_states[i-1]:
+            number_of_repeated_states += 1
+    if number_of_repeated_states > 0:
+        print(f"There were {number_of_repeated_states} repeated_states.\n")
+    # check for trivial states
+    for i in range(len(ordered_list_of_states)):
+        found = False
+        for j in range(len(trace)):
+            if trace[j]['s'] == ordered_list_of_states[i]:
+                found = True
+        if not found:
+            laststate = {'s':ordered_list_of_states[i], 'v':1}
+            trace.append(laststate)
+            print('Added last state')
+
+
+    assert len(ordered_list_of_states) == len(trace)+number_of_repeated_states, 'Arrays of different size'
     for i in range(len(ordered_list_of_states)):
         for j in range(len(trace)):
             if ordered_list_of_states[i] == trace[j]['s']:
