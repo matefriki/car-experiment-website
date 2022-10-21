@@ -12,6 +12,8 @@ import trace_convert
 import graph_generator
 import pickle
 
+DEBUG = False # Turning this Debug flag to true gives you more input, and may mess up main.js
+
 
 # Ranges for all state variables (inclusive) in order of input
 ranges = [
@@ -102,8 +104,10 @@ mdpprogram = mdptemp.format(person_x = person_x, person_y = person_y, car_x = ca
 with open("mdpprogram.pm", "w") as file:
     file.write(mdpprogram)
 
+RUN_PRISM_SIMULATOR = True
 
-system("{} program.pm -simpath {} temp/path.txt >/dev/null 2>&1".format(prism_path, path_length)) # >/dev/null 2>&1
+if RUN_PRISM_SIMULATOR:
+    system("{} program.pm -simpath {} temp/path.txt >/dev/null 2>&1".format(prism_path, path_length)) # >/dev/null 2>&1
 
 def load_path(file_name):
     file = open(file_name, "r")
@@ -141,18 +145,19 @@ for name in names:
     if not trace:
         sys.exit("JSON load error: can't load props (likely trace too short)")
     probs = []*len(trace)
-    file = open('trace', 'wb')
-    pickle.dump(trace, file)
-    file.close()
-    file = open('ordered_list_of_states', 'wb')
-    pickle.dump(ordered_list_of_states, file)
-    file.close()
+    if DEBUG:
+        file = open('trace', 'wb')
+        pickle.dump(trace, file)
+        file.close()
+        file = open('ordered_list_of_states', 'wb')
+        pickle.dump(ordered_list_of_states, file)
+        file.close()
     # check for repeated states
     number_of_repeated_states = 0
     for i in range(1,len(ordered_list_of_states)):
         if ordered_list_of_states[i] == ordered_list_of_states[i-1]:
             number_of_repeated_states += 1
-    if number_of_repeated_states > 0:
+    if DEBUG:
         print(f"There were {number_of_repeated_states} repeated_states.\n")
     # check for trivial states
     for i in range(len(ordered_list_of_states)):
@@ -163,7 +168,8 @@ for name in names:
         if not found:
             laststate = {'s':ordered_list_of_states[i], 'v':1}
             trace.append(laststate)
-            print('Added last state')
+            if DEBUG:
+                print('Added last state')
 
 
     assert len(ordered_list_of_states) == len(trace)+number_of_repeated_states, 'Arrays of different size'
