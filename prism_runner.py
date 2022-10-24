@@ -196,6 +196,14 @@ for i in df1.index:
 #     client.containers.run("lposch/tempest-devel-traces:latest", "storm --prism program.pm --prop prism_files/dtmc_props.props --trace-input trace_input.txt --exportresult dtmcprops.json --buildstateval", volumes = {os.getcwd(): {'bind': '/mnt/vol1', 'mode': 'rw'}}, working_dir = "/mnt/vol1", stderr = True)    
 #     fill_df with p of the strategy
 
+df1array = [df1]
 
-graph_generator.main(df1, strat_list[0])
+for i in range(len(strat_list)-1):
+    newdf = df1.copy()
+    for i in newdf.index:
+        a = newdf.loc[i,'Pmin']
+        b = newdf.loc[i,'Pmax']
+        newdf.loc[i,'P'] = (b - a) * np.random.random_sample() + a
+    df1array.append(newdf)
+graph_generator.main(df1array, strat_list)
 # system("python3 graph_generator.py")
