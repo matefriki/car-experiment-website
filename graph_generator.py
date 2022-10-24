@@ -33,7 +33,7 @@ def firstPlot(df, states, state_ticks, state_labels, idx=0, strat_name='strategy
     plt.xticks(state_ticks, state_labels)
     axs1.set_ylabel('Probability')
     plt.yticks([0, 0.5, 1.0], ['0','0.5', '1.0'])
-    axs1.set_title('le titre')
+    axs1.set_title('Raw probabilities')
     axs1.plot(1, 0, ">k", transform=axs1.get_yaxis_transform(), clip_on=False)
     
     # plt.tight_layout()
@@ -67,7 +67,7 @@ def secondPlot(df, states, state_ticks, state_labels, idx=0, strat_name='strateg
     axs2.set_ylabel('Probability')
     plt.yticks([0,0.5, 1.0], ['0','0.5', '1.0'])
     axs2.plot(1, 0, ">k", transform=axs2.get_yaxis_transform(), clip_on=False)
-    axs2.set_title('le titre')
+    axs2.set_title('Relative intention')
         
     # axs2.margins(0)
     plt.savefig("temp/graph_right.png")
