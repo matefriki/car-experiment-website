@@ -12,7 +12,24 @@ import trace_convert
 import graph_generator
 import pickle
 
+def load_path(file_name):
+    file = open(file_name, "r")
+    path_lines = [x.strip() for x in file.readlines()]
+    file.close()
+
+    # make each array item into sep array
+    path_lines = [item.split(" ") for item in path_lines]
+    labels = path_lines[0]
+    path_lines = path_lines[1:]
+
+    path = {}
+    for i, label in enumerate(labels):
+        path[label] = [row[i] for row in path_lines]
+
+    return path
+
 DEBUG = False # Turning this Debug flag to true gives you more input, and may mess up main.js
+RUN_PRISM_SIMULATOR = True
 
 
 # Ranges for all state variables (inclusive) in order of input
@@ -80,8 +97,8 @@ strat_list = strategies.split(",")
 if len(strat_list) == 0:
     sys.exit("Invalid input: no strategies provided")
 
-for name in strat_list:
-    if name not in strat_files:
+for strat_name in strat_list:
+    if strat_name not in strat_files:
         sys.exit("Invalid input: strategy does not exist")
 
 # check if mpggenerated is there. If not, creates it in temp folder, along with dtmc files
@@ -89,121 +106,207 @@ path_to_generated_mdp = "temp/mdpgenerated.pm"
 if not os.path.exists(path_to_generated_mdp):
     strat_generator.main("prism_files/mdp.pm")
 
-with open(strat_files[strat_list[0]], "r") as file:
-    template = file.read()
+df1array = []
 
-program = template.format(person_x = person_x, person_y = person_y, car_x = car_x, car_y = car_y, top_corner_x = top_corner_x, top_corner_y = top_corner_y,  bottom_corner_x = bottom_corner_x, bottom_corner_y = bottom_corner_y)
-with open("program.pm", "w") as file:
-    file.write(program)
-sleep(.1)
+for i in range(len(strat_list)):
+    strat_name = strat_list[i]
+    with open(strat_files[strat_name], 'r') as file:
+        template = file.read()
+    program = template.format(person_x = person_x, person_y = person_y, 
+                            car_x = car_x, car_y = car_y, 
+                            top_corner_x = top_corner_x, top_corner_y = top_corner_y,  
+                            bottom_corner_x = bottom_corner_x, bottom_corner_y = bottom_corner_y)    
+    with open(f"program_{strat_name}.pm", 'w') as fp:
+        fp.write(program)
+    sleep(.1)
 
-# writes mdp program to run in storm, if file did not exist before, creates it from mpd.pm
-with open(path_to_generated_mdp, "r") as file:
-    mdptemp = file.read()
-mdpprogram = mdptemp.format(person_x = person_x, person_y = person_y, car_x = car_x, car_y = car_y, top_corner_x = top_corner_x, top_corner_y = top_corner_y,  bottom_corner_x = bottom_corner_x, bottom_corner_y = bottom_corner_y)
-with open("mdpprogram.pm", "w") as file:
-    file.write(mdpprogram)
+    if i == 0:
+        with open(path_to_generated_mdp, "r") as fp:
+            mdptemp = fp.read()
+        mdpprogram = mdptemp.format(person_x = person_x, person_y = person_y, car_x = car_x, car_y = car_y, top_corner_x = top_corner_x, top_corner_y = top_corner_y,  bottom_corner_x = bottom_corner_x, bottom_corner_y = bottom_corner_y)
+        with open("mdpprogram.pm", "w") as fp:
+            fp.write(mdpprogram)
+        if RUN_PRISM_SIMULATOR:
+            system("{} program_{}.pm -simpath {} temp/path.txt >/dev/null 2>&1".format(prism_path, strat_name, path_length)) # >/dev/null 2>&1
+        sleep(.1)
+        path = load_path("temp/path.txt")
+        print(json.dumps(path))
 
-RUN_PRISM_SIMULATOR = True
+        # system("python3 trace_convert.py")
+        ordered_list_of_states = trace_convert.main()
 
-if RUN_PRISM_SIMULATOR:
-    system("{} program.pm -simpath {} temp/path.txt >/dev/null 2>&1".format(prism_path, path_length)) # >/dev/null 2>&1
+        client = docker.from_env()
 
-def load_path(file_name):
-    file = open(file_name, "r")
-    path_lines = [x.strip() for x in file.readlines()]
-    file.close()
+        client.containers.run("lposch/tempest-devel-traces:latest", "storm --prism mdpprogram.pm --prop prism_files/mdp_props.props --trace-input trace_input.txt --exportresult mdpprops.json --buildstateval", volumes = {os.getcwd(): {'bind': '/mnt/vol1', 'mode': 'rw'}}, working_dir = "/mnt/vol1", stderr = True)
+    client.containers.run("lposch/tempest-devel-traces:latest", f"storm --prism program_{strat_name}.pm --prop prism_files/dtmc_props.props --trace-input trace_input.txt --exportresult dtmc_{strat_name}_props.json --buildstateval", volumes = {os.getcwd(): {'bind': '/mnt/vol1', 'mode': 'rw'}}, working_dir = "/mnt/vol1", stderr = True)
 
-    # make each array item into sep array
-    path_lines = [item.split(" ") for item in path_lines]
-    labels = path_lines[0]
-    path_lines = path_lines[1:]
-
-    path = {}
-    for i, label in enumerate(labels):
-        path[label] = [row[i] for row in path_lines]
-
-    return path
-
-sleep(.1)
-path = load_path("temp/path.txt")
-print(json.dumps(path))
-
-# system("python3 trace_convert.py")
-ordered_list_of_states = trace_convert.main()
-
-client = docker.from_env()
-
-client.containers.run("lposch/tempest-devel-traces:latest", "storm --prism mdpprogram.pm --prop prism_files/mdp_props.props --trace-input trace_input.txt --exportresult mdpprops.json --buildstateval", volumes = {os.getcwd(): {'bind': '/mnt/vol1', 'mode': 'rw'}}, working_dir = "/mnt/vol1", stderr = True)
-client.containers.run("lposch/tempest-devel-traces:latest", "storm --prism program.pm --prop prism_files/dtmc_props.props --trace-input trace_input.txt --exportresult dtmcprops.json --buildstateval", volumes = {os.getcwd(): {'bind': '/mnt/vol1', 'mode': 'rw'}}, working_dir = "/mnt/vol1", stderr = True)
-
-names = ['dtmc','mdp','1mdp']
-pminmax = []*len(names)
-for name in names:
-    with open(f'{name}props.json',) as file:
-            trace = json.load(file)
-    if not trace:
-        sys.exit("JSON load error: can't load props (likely trace too short)")
-    probs = []*len(trace)
-    if DEBUG:
-        file = open('trace', 'wb')
-        pickle.dump(trace, file)
-        file.close()
-        file = open('ordered_list_of_states', 'wb')
-        pickle.dump(ordered_list_of_states, file)
-        file.close()
-    # check for repeated states
-    number_of_repeated_states = 0
-    for i in range(1,len(ordered_list_of_states)):
-        if ordered_list_of_states[i] == ordered_list_of_states[i-1]:
-            number_of_repeated_states += 1
-    if DEBUG:
-        print(f"There were {number_of_repeated_states} repeated_states.\n")
-    # check for trivial states
-    for i in range(len(ordered_list_of_states)):
-        found = False
-        for j in range(len(trace)):
-            if trace[j]['s'] == ordered_list_of_states[i]:
-                found = True
-        if not found:
-            laststate = {'s':ordered_list_of_states[i], 'v':1}
-            trace.append(laststate)
-            if DEBUG:
-                print('Added last state')
+    names = [f'dtmc_{strat_name}_','mdp','1mdp']
+    pminmax = []*len(names)
+    for name in names:
+        with open(f'{name}props.json',) as file:
+                trace = json.load(file)
+        if not trace:
+            sys.exit("JSON load error: can't load props (likely trace too short)")
+        probs = []*len(trace)
+        if DEBUG:
+            file = open('trace', 'wb')
+            pickle.dump(trace, file)
+            file.close()
+            file = open('ordered_list_of_states', 'wb')
+            pickle.dump(ordered_list_of_states, file)
+            file.close()
+        # check for repeated states
+        number_of_repeated_states = 0
+        for i in range(1,len(ordered_list_of_states)):
+            if ordered_list_of_states[i] == ordered_list_of_states[i-1]:
+                number_of_repeated_states += 1
+        if DEBUG:
+            print(f"There were {number_of_repeated_states} repeated_states.\n")
+        # check for trivial states
+        for i in range(len(ordered_list_of_states)):
+            found = False
+            for j in range(len(trace)):
+                if trace[j]['s'] == ordered_list_of_states[i]:
+                    found = True
+            if not found:
+                laststate = {'s':ordered_list_of_states[i], 'v':1}
+                trace.append(laststate)
+                if DEBUG:
+                    print('Added last state')
 
 
-    assert len(ordered_list_of_states) == len(trace)+number_of_repeated_states, 'Arrays of different size'
-    for i in range(len(ordered_list_of_states)):
-        for j in range(len(trace)):
-            if ordered_list_of_states[i] == trace[j]['s']:
-                probs.append(trace[j]['v'])
-    pminmax.append(probs)
+        assert len(ordered_list_of_states) == len(trace)+number_of_repeated_states, 'Arrays of different size'
+        for i in range(len(ordered_list_of_states)):
+            for j in range(len(trace)):
+                if ordered_list_of_states[i] == trace[j]['s']:
+                    probs.append(trace[j]['v'])
+        pminmax.append(probs)
 
-columns = ['Pmin', 'Pmax', 'P', 'Rmin', 'Rmax', 'R']
-df1 = pd.DataFrame(0, index=np.arange(len(ordered_list_of_states)), columns=columns)
-for i in df1.index:
-        p = pminmax[0][i]
-        r = 0  # r is maintained for backwards compatibility, not computed anymore
-        pmin = pminmax[2][i]
-        pmax = pminmax[1][i]
-        rmin = 0
-        # rmax = getProbs(Rmaxfile)[i]
-        rmax = 0 # r is maintained for backwards compatibility, not computed anymore
-        df1.loc[i,:] = [pmin, pmax, p, rmin, rmax, r]
-# fill df with pmin pmax
-# for strat in set_of_strategies:
-#     make the program file program.pm
-#     client.containers.run("lposch/tempest-devel-traces:latest", "storm --prism program.pm --prop prism_files/dtmc_props.props --trace-input trace_input.txt --exportresult dtmcprops.json --buildstateval", volumes = {os.getcwd(): {'bind': '/mnt/vol1', 'mode': 'rw'}}, working_dir = "/mnt/vol1", stderr = True)    
-#     fill_df with p of the strategy
+    columns = ['Pmin', 'Pmax', 'P', 'Rmin', 'Rmax', 'R']
+    df1 = pd.DataFrame(0, index=np.arange(len(ordered_list_of_states)), columns=columns)
+    for i in df1.index:
+            p = pminmax[0][i]
+            r = 0  # r is maintained for backwards compatibility, not computed anymore
+            pmin = pminmax[2][i]
+            pmax = pminmax[1][i]
+            rmin = 0
+            # rmax = getProbs(Rmaxfile)[i]
+            rmax = 0 # r is maintained for backwards compatibility, not computed anymore
+            df1.loc[i,:] = [pmin, pmax, p, rmin, rmax, r]
+    df1array.append(df1)
 
-df1array = [df1]
 
-for i in range(len(strat_list)-1):
-    newdf = df1.copy()
-    for i in newdf.index:
-        a = newdf.loc[i,'Pmin']
-        b = newdf.loc[i,'Pmax']
-        newdf.loc[i,'P'] = (b - a) * np.random.random_sample() + a
-    df1array.append(newdf)
+
+
+#### FROM HERE CALL STORM
+
+# with open(strat_files[strat_list[0]], "r") as file:
+#     template = file.read()
+
+# program = template.format(person_x = person_x, person_y = person_y, car_x = car_x, car_y = car_y, top_corner_x = top_corner_x, top_corner_y = top_corner_y,  bottom_corner_x = bottom_corner_x, bottom_corner_y = bottom_corner_y)
+# with open("program.pm", "w") as file:
+#     file.write(program)
+# sleep(.1)
+
+# # writes mdp program to run in storm, if file did not exist before, creates it from mpd.pm
+# with open(path_to_generated_mdp, "r") as file:
+#     mdptemp = file.read()
+# mdpprogram = mdptemp.format(person_x = person_x, person_y = person_y, car_x = car_x, car_y = car_y, top_corner_x = top_corner_x, top_corner_y = top_corner_y,  bottom_corner_x = bottom_corner_x, bottom_corner_y = bottom_corner_y)
+# with open("mdpprogram.pm", "w") as file:
+#     file.write(mdpprogram)
+
+
+# if RUN_PRISM_SIMULATOR:
+#     system("{} program.pm -simpath {} temp/path.txt >/dev/null 2>&1".format(prism_path, path_length)) # >/dev/null 2>&1
+
+
+# sleep(.1)
+# path = load_path("temp/path.txt")
+# print(json.dumps(path))
+
+# # system("python3 trace_convert.py")
+# ordered_list_of_states = trace_convert.main()
+
+# client = docker.from_env()
+
+# client.containers.run("lposch/tempest-devel-traces:latest", "storm --prism mdpprogram.pm --prop prism_files/mdp_props.props --trace-input trace_input.txt --exportresult mdpprops.json --buildstateval", volumes = {os.getcwd(): {'bind': '/mnt/vol1', 'mode': 'rw'}}, working_dir = "/mnt/vol1", stderr = True)
+# client.containers.run("lposch/tempest-devel-traces:latest", "storm --prism program.pm --prop prism_files/dtmc_props.props --trace-input trace_input.txt --exportresult dtmcprops.json --buildstateval", volumes = {os.getcwd(): {'bind': '/mnt/vol1', 'mode': 'rw'}}, working_dir = "/mnt/vol1", stderr = True)
+
+# #### UNITL HERE CALL STORM
+
+# names = ['dtmc','mdp','1mdp']
+# pminmax = []*len(names)
+# for name in names:
+#     with open(f'{name}props.json',) as file:
+#             trace = json.load(file)
+#     if not trace:
+#         sys.exit("JSON load error: can't load props (likely trace too short)")
+#     probs = []*len(trace)
+#     if DEBUG:
+#         file = open('trace', 'wb')
+#         pickle.dump(trace, file)
+#         file.close()
+#         file = open('ordered_list_of_states', 'wb')
+#         pickle.dump(ordered_list_of_states, file)
+#         file.close()
+#     # check for repeated states
+#     number_of_repeated_states = 0
+#     for i in range(1,len(ordered_list_of_states)):
+#         if ordered_list_of_states[i] == ordered_list_of_states[i-1]:
+#             number_of_repeated_states += 1
+#     if DEBUG:
+#         print(f"There were {number_of_repeated_states} repeated_states.\n")
+#     # check for trivial states
+#     for i in range(len(ordered_list_of_states)):
+#         found = False
+#         for j in range(len(trace)):
+#             if trace[j]['s'] == ordered_list_of_states[i]:
+#                 found = True
+#         if not found:
+#             laststate = {'s':ordered_list_of_states[i], 'v':1}
+#             trace.append(laststate)
+#             if DEBUG:
+#                 print('Added last state')
+
+
+#     assert len(ordered_list_of_states) == len(trace)+number_of_repeated_states, 'Arrays of different size'
+#     for i in range(len(ordered_list_of_states)):
+#         for j in range(len(trace)):
+#             if ordered_list_of_states[i] == trace[j]['s']:
+#                 probs.append(trace[j]['v'])
+#     pminmax.append(probs)
+
+# columns = ['Pmin', 'Pmax', 'P', 'Rmin', 'Rmax', 'R']
+# df1 = pd.DataFrame(0, index=np.arange(len(ordered_list_of_states)), columns=columns)
+# for i in df1.index:
+#         p = pminmax[0][i]
+#         r = 0  # r is maintained for backwards compatibility, not computed anymore
+#         pmin = pminmax[2][i]
+#         pmax = pminmax[1][i]
+#         rmin = 0
+#         # rmax = getProbs(Rmaxfile)[i]
+#         rmax = 0 # r is maintained for backwards compatibility, not computed anymore
+#         df1.loc[i,:] = [pmin, pmax, p, rmin, rmax, r]
+# # fill df with pmin pmax
+# # for strat in set_of_strategies:
+# #     make the program file program.pm
+# #     client.containers.run("lposch/tempest-devel-traces:latest", "storm --prism program.pm --prop prism_files/dtmc_props.props --trace-input trace_input.txt --exportresult dtmcprops.json --buildstateval", volumes = {os.getcwd(): {'bind': '/mnt/vol1', 'mode': 'rw'}}, working_dir = "/mnt/vol1", stderr = True)    
+# #     fill_df with p of the strategy
+
+# df1array = [df1]
+
+#### END OLD VERSION
+
+# ## BEGIN STUPID DEBUG
+
+# for i in range(len(strat_list)-1):
+#     newdf = df1.copy()
+#     for i in newdf.index:
+#         a = newdf.loc[i,'Pmin']
+#         b = newdf.loc[i,'Pmax']
+#         newdf.loc[i,'P'] = (b - a) * np.random.random_sample() + a
+#     df1array.append(newdf)
+
+# ## END STUPID DEBUG
+
 graph_generator.main(df1array, strat_list)
-# system("python3 graph_generator.py")
