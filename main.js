@@ -54,23 +54,47 @@ io.on('connection', (socket) => {
         socket.emit("path", buffer);
         closed();
 
-        fs.readFile('temp/graph_left.png', (err, data) => {
-          if (err) {
-            console.error(err);
-            return;
-          }
+        if (code != 0) {
+          fs.readFile('assets/errormessage.png', (err, data) => {
+            if (err) {
+              console.error(err);
+              return;
+            }
+  
+            setTimeout(() => socket.emit("graph_left", data), 500);
+          });
 
-          setTimeout(() => socket.emit("graph_left", data), 500);
-        });
+          fs.readFile('assets/errormessage.png', (err, data) => {
+            if (err) {
+              console.error(err);
+              return;
+            }
+  
+            setTimeout(() => socket.emit("graph_right", data), 500);
+          });
+        }
+        else {
+          fs.readFile('temp/graph_left.png', (err, data) => {
+            if (err) {
+              console.error(err);
+              return;
+            }
+  
+            setTimeout(() => socket.emit("graph_left", data), 500);
+          });
 
-        fs.readFile('temp/graph_right.png', (err, data) => {
-          if (err) {
-            console.error(err);
-            return;
-          }
+          fs.readFile('temp/graph_right.png', (err, data) => {
+            if (err) {
+              console.error(err);
+              return;
+            }
+  
+            setTimeout(() => socket.emit("graph_right", data), 500);
+          });
+        }
 
-          setTimeout(() => socket.emit("graph_right", data), 500);
-        });
+        
+        
       });
     });
 
