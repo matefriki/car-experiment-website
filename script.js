@@ -6,6 +6,7 @@ let unit = 0;
 let spinner;
 let replay_btn;
 let strat_bullet;
+let strat_dropdown;
 let car_input_x, car_input_y;
 let person_input_x, person_input_y;
 let top_input_x, top_input_y, bottom_input_x, bottom_input_y;
@@ -23,6 +24,9 @@ window.addEventListener('load', () => {
     socket.on("path", animatePath);
     socket.on("graph_left", (data) => displayGraph(data, true));
     socket.on("graph_right", (data) => displayGraph(data, false));
+
+    // Select trace with strat dropdown
+    strat_dropdown = document.body.querySelector(".strat-dropdown");
 
     // Get reference to and setup the strategy selection dropdown from html
     strat_bullet = document.body.querySelector(".bullet");
