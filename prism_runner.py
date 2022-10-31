@@ -1,5 +1,5 @@
 from asyncio import base_tasks
-from os import system, getcwd
+import os
 import re
 from time import sleep
 import os
@@ -55,20 +55,20 @@ starting_state = [arg for arg in input().split(" ") if arg]
 # print(starting_state)
 
 # Ensure correct number of arguments
-if len(starting_state) != (len(ranges) + 1):
+if len(starting_state) != (len(ranges) + 2):
     sys.exit("Invalid input: incorrect number of args")
 
 # Ensure numerical arguments aren't bigger than reasonable length (10)
-if any([len(arg) > 10 for arg in starting_state[1:]]):
+if any([len(arg) > 10 for arg in starting_state[2:]]):
     sys.exit("Invalid input: argument too big")
 
 # Ensure all numerical arguments contain only valid characters (positive integers)
-if not all([num.isnumeric() for num in starting_state[1:]]):
+if not all([num.isnumeric() for num in starting_state[2:]]):
     sys.exit("Invalid input: not all positive integers")
 
 # Parse numerical arguments to integers
 try:
-    starting_state[1:] = [int(n) for n in starting_state[1:]]
+    starting_state[2:] = [int(n) for n in starting_state[2:]]
 # Ensure all arguments parse correctly
 except Exception as e:
     sys.exit(f"Parse error: {e}")
@@ -76,10 +76,10 @@ except Exception as e:
 # Ensure arguments are within desired ranges
 def within_range(num, range):
     return num >= range[0] and num <= range[1]
-if not all([within_range(arg, ranges[i]) for i, arg in enumerate(starting_state[1:])]):
+if not all([within_range(arg, ranges[i]) for i, arg in enumerate(starting_state[2:])]):
     sys.exit("Invalid input: argument out of range")
 
-strategies, path_length, person_x, person_y, car_x, car_y, top_corner_x, top_corner_y, bottom_corner_x, bottom_corner_y = starting_state
+strategies, trace_name, path_length, person_x, person_y, car_x, car_y, top_corner_x, top_corner_y, bottom_corner_x, bottom_corner_y = starting_state
 
 # Ensure strat_name is in list of available options
 
@@ -126,13 +126,16 @@ for i in range(len(strat_list)):
         mdpprogram = mdptemp.format(person_x = person_x, person_y = person_y, car_x = car_x, car_y = car_y, top_corner_x = top_corner_x, top_corner_y = top_corner_y,  bottom_corner_x = bottom_corner_x, bottom_corner_y = bottom_corner_y)
         with open("mdpprogram.pm", "w") as fp:
             fp.write(mdpprogram)
-        if RUN_PRISM_SIMULATOR:
-            system("{} program_{}.pm -simpath {} temp/path.txt >/dev/null 2>&1".format(prism_path, strat_name, path_length)) # >/dev/null 2>&1
-        sleep(.1)
-        path = load_path("temp/path.txt")
+        if os.path.exists(f'traces/{trace_name}.txt'):
+            path = load_path(f'traces/{trace_name}.txt')
+        else:
+        # if RUN_PRISM_SIMULATOR:
+            os.system("{} program_{}.pm -simpath {} temp/path.txt >/dev/null 2>&1".format(prism_path, strat_name, path_length)) # >/dev/null 2>&1
+            sleep(.1)
+            path = load_path("temp/path.txt")
         print(json.dumps(path))
 
-        # system("python3 trace_convert.py")
+        # os.system("python3 trace_convert.py")
         ordered_list_of_states = trace_convert.main()
 
         client = docker.from_env()
@@ -196,117 +199,5 @@ for i in range(len(strat_list)):
     df1array.append(df1)
 
 
-
-
-#### FROM HERE CALL STORM
-
-# with open(strat_files[strat_list[0]], "r") as file:
-#     template = file.read()
-
-# program = template.format(person_x = person_x, person_y = person_y, car_x = car_x, car_y = car_y, top_corner_x = top_corner_x, top_corner_y = top_corner_y,  bottom_corner_x = bottom_corner_x, bottom_corner_y = bottom_corner_y)
-# with open("program.pm", "w") as file:
-#     file.write(program)
-# sleep(.1)
-
-# # writes mdp program to run in storm, if file did not exist before, creates it from mpd.pm
-# with open(path_to_generated_mdp, "r") as file:
-#     mdptemp = file.read()
-# mdpprogram = mdptemp.format(person_x = person_x, person_y = person_y, car_x = car_x, car_y = car_y, top_corner_x = top_corner_x, top_corner_y = top_corner_y,  bottom_corner_x = bottom_corner_x, bottom_corner_y = bottom_corner_y)
-# with open("mdpprogram.pm", "w") as file:
-#     file.write(mdpprogram)
-
-
-# if RUN_PRISM_SIMULATOR:
-#     system("{} program.pm -simpath {} temp/path.txt >/dev/null 2>&1".format(prism_path, path_length)) # >/dev/null 2>&1
-
-
-# sleep(.1)
-# path = load_path("temp/path.txt")
-# print(json.dumps(path))
-
-# # system("python3 trace_convert.py")
-# ordered_list_of_states = trace_convert.main()
-
-# client = docker.from_env()
-
-# client.containers.run("lposch/tempest-devel-traces:latest", "storm --prism mdpprogram.pm --prop prism_files/mdp_props.props --trace-input trace_input.txt --exportresult mdpprops.json --buildstateval", volumes = {os.getcwd(): {'bind': '/mnt/vol1', 'mode': 'rw'}}, working_dir = "/mnt/vol1", stderr = True)
-# client.containers.run("lposch/tempest-devel-traces:latest", "storm --prism program.pm --prop prism_files/dtmc_props.props --trace-input trace_input.txt --exportresult dtmcprops.json --buildstateval", volumes = {os.getcwd(): {'bind': '/mnt/vol1', 'mode': 'rw'}}, working_dir = "/mnt/vol1", stderr = True)
-
-# #### UNITL HERE CALL STORM
-
-# names = ['dtmc','mdp','1mdp']
-# pminmax = []*len(names)
-# for name in names:
-#     with open(f'{name}props.json',) as file:
-#             trace = json.load(file)
-#     if not trace:
-#         sys.exit("JSON load error: can't load props (likely trace too short)")
-#     probs = []*len(trace)
-#     if DEBUG:
-#         file = open('trace', 'wb')
-#         pickle.dump(trace, file)
-#         file.close()
-#         file = open('ordered_list_of_states', 'wb')
-#         pickle.dump(ordered_list_of_states, file)
-#         file.close()
-#     # check for repeated states
-#     number_of_repeated_states = 0
-#     for i in range(1,len(ordered_list_of_states)):
-#         if ordered_list_of_states[i] == ordered_list_of_states[i-1]:
-#             number_of_repeated_states += 1
-#     if DEBUG:
-#         print(f"There were {number_of_repeated_states} repeated_states.\n")
-#     # check for trivial states
-#     for i in range(len(ordered_list_of_states)):
-#         found = False
-#         for j in range(len(trace)):
-#             if trace[j]['s'] == ordered_list_of_states[i]:
-#                 found = True
-#         if not found:
-#             laststate = {'s':ordered_list_of_states[i], 'v':1}
-#             trace.append(laststate)
-#             if DEBUG:
-#                 print('Added last state')
-
-
-#     assert len(ordered_list_of_states) == len(trace)+number_of_repeated_states, 'Arrays of different size'
-#     for i in range(len(ordered_list_of_states)):
-#         for j in range(len(trace)):
-#             if ordered_list_of_states[i] == trace[j]['s']:
-#                 probs.append(trace[j]['v'])
-#     pminmax.append(probs)
-
-# columns = ['Pmin', 'Pmax', 'P', 'Rmin', 'Rmax', 'R']
-# df1 = pd.DataFrame(0, index=np.arange(len(ordered_list_of_states)), columns=columns)
-# for i in df1.index:
-#         p = pminmax[0][i]
-#         r = 0  # r is maintained for backwards compatibility, not computed anymore
-#         pmin = pminmax[2][i]
-#         pmax = pminmax[1][i]
-#         rmin = 0
-#         # rmax = getProbs(Rmaxfile)[i]
-#         rmax = 0 # r is maintained for backwards compatibility, not computed anymore
-#         df1.loc[i,:] = [pmin, pmax, p, rmin, rmax, r]
-# # fill df with pmin pmax
-# # for strat in set_of_strategies:
-# #     make the program file program.pm
-# #     client.containers.run("lposch/tempest-devel-traces:latest", "storm --prism program.pm --prop prism_files/dtmc_props.props --trace-input trace_input.txt --exportresult dtmcprops.json --buildstateval", volumes = {os.getcwd(): {'bind': '/mnt/vol1', 'mode': 'rw'}}, working_dir = "/mnt/vol1", stderr = True)    
-# #     fill_df with p of the strategy
-
-# df1array = [df1]
-
-#### END OLD VERSION
-
-# ## BEGIN STUPID DEBUG
-
-# for i in range(len(strat_list)-1):
-#     newdf = df1.copy()
-#     for i in newdf.index:
-#         a = newdf.loc[i,'Pmin']
-#         b = newdf.loc[i,'Pmax']
-#         newdf.loc[i,'P'] = (b - a) * np.random.random_sample() + a
-#     df1array.append(newdf)
-
-# ## END STUPID DEBUG
 
 graph_generator.main(df1array, strat_list)

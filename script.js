@@ -6,7 +6,7 @@ let unit = 0;
 let spinner;
 let replay_btn;
 let strat_bullet;
-let strat_dropdown;
+let trace_dropdown;
 let car_input_x, car_input_y;
 let person_input_x, person_input_y;
 let top_input_x, top_input_y, bottom_input_x, bottom_input_y;
@@ -26,7 +26,7 @@ window.addEventListener('load', () => {
     socket.on("graph_right", (data) => displayGraph(data, false));
 
     // Select trace with strat dropdown
-    strat_dropdown = document.body.querySelector(".strat-dropdown");
+    trace_dropdown = document.body.querySelector(".strat-dropdown");
 
     // Get reference to and setup the strategy selection dropdown from html
     strat_bullet = document.body.querySelector(".bullet");
@@ -416,7 +416,7 @@ function sendGenerateMessage() {
 
     let bottom_point = [Math.min(...x_values), Math.min(...y_values)].map((n) => n.toString());
     let top_point = [Math.max(...x_values), Math.max(...y_values)].map((n) => n.toString());
-    socket.emit('generate', strat_bullet.dataset.value, path_length.innerText, person_input_x.innerText, person_input_y.innerText, car_input_x.innerText, car_input_y.innerText, top_point[0], top_point[1], bottom_point[0], bottom_point[1]);
+    socket.emit('generate', strat_bullet.dataset.value, trace_dropdown.dataset.value, path_length.innerText, person_input_x.innerText, person_input_y.innerText, car_input_x.innerText, car_input_y.innerText, top_point[0], top_point[1], bottom_point[0], bottom_point[1]);
 }
 
 // Handle beginning of drag event
