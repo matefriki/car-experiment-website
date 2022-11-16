@@ -29,8 +29,7 @@ def load_path(file_name):
     return path
 
 DEBUG = False # Turning this Debug flag to true gives you more input, and may mess up main.js
-RUN_PRISM_SIMULATOR = True
-
+USE_VISIBILITY = False
 
 # Ranges for all state variables (inclusive) in order of input
 ranges = [
@@ -51,8 +50,6 @@ with open("config.txt", "r") as file:
 
 # Split arguments into array of strings
 starting_state = [arg for arg in input().split(" ") if arg]
-# starting_state = [arg for arg in sys.argv[1:] if arg]
-# print(starting_state)
 
 # Ensure correct number of arguments
 if len(starting_state) != (len(ranges) + 2):
@@ -103,8 +100,13 @@ for strat_name in strat_list:
 
 # check if mpggenerated is there. If not, creates it in temp folder, along with dtmc files
 path_to_generated_mdp = "temp/mdpgenerated.pm"
-if not os.path.exists(path_to_generated_mdp):
-    strat_generator.main("prism_files/mdp.pm")
+# if not os.path.exists(path_to_generated_mdp) or True:
+#     strat_generator.main("prism_files/mdp.pm", use_visibility = USE_VISIBILITY)
+
+if USE_VISIBILITY:
+    strat_generator.main("prism_files/mdp.pm", use_visibility = USE_VISIBILITY)
+else:
+    strat_generator.main("prism_files/mdp_novis.pm", use_visibility = USE_VISIBILITY)
 
 df1array = []
 
@@ -129,10 +131,12 @@ for i in range(len(strat_list)):
         if os.path.exists(f'traces/{trace_name}.txt'):
             path = load_path(f'traces/{trace_name}.txt')
         else:
-        # if RUN_PRISM_SIMULATOR:
             os.system("{} program_{}.pm -simpath {} temp/path.txt >/dev/null 2>&1".format(prism_path, strat_name, path_length)) # >/dev/null 2>&1
             sleep(.1)
             path = load_path("temp/path.txt")
+        if not USE_VISIBILITY:
+            path["visibility"] = [1 for i in range(len(path["action"]))]
+            path["seen_ped"] = [1 for i in range(len(path["action"]))]
         print(json.dumps(path))
 
         # os.system("python3 trace_convert.py")
