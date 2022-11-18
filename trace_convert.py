@@ -5,7 +5,7 @@ import json
 def main():
 
     file = open("temp/path.txt", "r")
-    lines = [line.strip() for line in file.readlines()]
+    lines = [line.strip().replace('-', 'Pedestrian') for line in file.readlines()]
     file.close()
 
     label_dash = re.compile("-")

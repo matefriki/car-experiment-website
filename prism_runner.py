@@ -12,6 +12,7 @@ import trace_convert
 import graph_generator
 import pickle
 
+
 def load_path(file_name):
     file = open(file_name, "r")
     path_lines = [x.strip() for x in file.readlines()]
@@ -27,6 +28,7 @@ def load_path(file_name):
         path[label] = [row[i] for row in path_lines]
 
     return path
+
 
 DEBUG = False # Turning this Debug flag to true gives you more input, and may mess up main.js
 USE_VISIBILITY = False
