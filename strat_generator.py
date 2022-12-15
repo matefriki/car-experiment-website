@@ -50,9 +50,19 @@ def make_mdp(temp):
         f.write(replaced)
 
 # generates DTMC files for a dictionary and file input
-def make_dtmc(temp):
+def make_dtmc(temp, use_visibility=False):
     strats = open('strategy.json')
     strategy = json.load(strats) ## this is a dict, keys are names of strategies
+
+    if not use_visibility:
+        for keystrat in strategy.keys():
+            for keyaction in strategy[keystrat].keys():
+                strategy[keystrat][keyaction] = strategy[keystrat][keyaction].replace(' ', '')
+                strategy[keystrat][keyaction] = strategy[keystrat][keyaction].replace('seen_ped=0', 'false')
+                strategy[keystrat][keyaction] = strategy[keystrat][keyaction].replace('seen_ped=1', 'true')
+                strategy[keystrat][keyaction] = strategy[keystrat][keyaction].replace('visibility=0', 'false')
+                strategy[keystrat][keyaction] = strategy[keystrat][keyaction].replace('visibility=1', 'true')
+
     for strat in strategy:
 
         file = open(temp, "r")    
@@ -80,7 +90,7 @@ def make_dtmc(temp):
         
 
 
-def main(prism_file=""):
+def main(prism_file="", use_visibility=False):
    
 
     # If prism file is given (executing normally should be prism_files/mdp.pm), use it. If empty, ask user for it.
@@ -90,7 +100,7 @@ def main(prism_file=""):
     # makes ones mdp file
     make_mdp(prism_file)
     # makes one dtmc file per strategy listed in the json file
-    make_dtmc(prism_file)
+    make_dtmc(prism_file, use_visibility = use_visibility)
 
     # 
     # for strat in strategy:
