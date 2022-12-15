@@ -8,7 +8,6 @@ def main():
     lines = [line.strip().replace('-', 'Pedestrian') for line in file.readlines()]
     file.close()
 
-    label_dash = re.compile("-")
     label_ped = re.compile("Pedestrian")
     label_car = re.compile("Car")
 
@@ -48,6 +47,10 @@ def main():
             if j != len(arr[i]) - 1:
                 lines[i] += " & "
 
+    
+    while '' in lines:
+        lines.remove('')
+    # print(lines)
 
     replaced = '\n'.join(lines)
     with open("trace_input.txt", "w") as f:

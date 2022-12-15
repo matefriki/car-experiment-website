@@ -1,7 +1,7 @@
 from asyncio import base_tasks
 import os
 import re
-from time import sleep
+import time, datetime
 import os
 import json
 import sys
@@ -11,6 +11,9 @@ import strat_generator
 import trace_convert
 import graph_generator
 import pickle
+
+# totalstart = time.process_time()
+totalstart = datetime.datetime.now()
 
 
 def load_path(file_name):
@@ -112,6 +115,13 @@ else:
 
 df1array = []
 
+## DEBUG timing vars
+model_construction_string = "Time for model construction: "
+model_checking_string = "Time for model checking: "
+time_model_construction = 0
+time_model_checking = 0
+## END DEBUB timing vars
+
 for i in range(len(strat_list)):
     strat_name = strat_list[i]
     with open(strat_files[strat_name], 'r') as file:
@@ -122,7 +132,9 @@ for i in range(len(strat_list)):
                             bottom_corner_x = bottom_corner_x, bottom_corner_y = bottom_corner_y)    
     with open(f"program_{strat_name}.pm", 'w') as fp:
         fp.write(program)
-    sleep(.1)
+    time.sleep(.1)
+    dockertime = 0
+
 
     if i == 0:
         with open(path_to_generated_mdp, "r") as fp:
@@ -134,7 +146,7 @@ for i in range(len(strat_list)):
             path = load_path(f'traces/{trace_name}.txt')
         else:
             os.system("{} program_{}.pm -simpath {} temp/path.txt >/dev/null 2>&1".format(prism_path, strat_name, path_length)) # >/dev/null 2>&1
-            sleep(.1)
+            time.sleep(.1)
             path = load_path("temp/path.txt")
         if not USE_VISIBILITY:
             path["visibility"] = [1 for i in range(len(path["action"]))]
@@ -143,11 +155,38 @@ for i in range(len(strat_list)):
 
         # os.system("python3 trace_convert.py")
         ordered_list_of_states = trace_convert.main()
-
-        client = docker.from_env()
-
-        client.containers.run("lposch/tempest-devel-traces:latest", "storm --prism mdpprogram.pm --prop prism_files/mdp_props.props --trace-input trace_input.txt --exportresult mdpprops.json --buildstateval", volumes = {os.getcwd(): {'bind': '/mnt/vol1', 'mode': 'rw'}}, working_dir = "/mnt/vol1", stderr = True)
-    client.containers.run("lposch/tempest-devel-traces:latest", f"storm --prism program_{strat_name}.pm --prop prism_files/dtmc_props.props --trace-input trace_input.txt --exportresult dtmc_{strat_name}_props.json --buildstateval", volumes = {os.getcwd(): {'bind': '/mnt/vol1', 'mode': 'rw'}}, working_dir = "/mnt/vol1", stderr = True)
+        # auxtimestart = time.process_time()
+        auxtimestart = datetime.datetime.now()
+        client = docker.from_env()     
+        aux = client.containers.run("lposch/tempest-devel-traces:latest", "storm --prism mdpprogram.pm --prop prism_files/mdp_props.props --trace-input trace_input.txt --exportresult mdpprops.json --buildstateval", volumes = {os.getcwd(): {'bind': '/mnt/vol1', 'mode': 'rw'}}, working_dir = "/mnt/vol1", stderr = True)
+        dockertime += (datetime.datetime.now() - auxtimestart).total_seconds()
+        outstr = aux.decode("utf-8")
+        with open('merda.txt', 'a') as fp:
+            fp.write(outstr)
+        # dockertime += time.process_time() - auxtimestart
+        for line in outstr.split('\n'):
+            if model_construction_string in line:
+                time_model_construction += float(line.split(model_construction_string)[-1].split('s.')[0])
+            if model_checking_string in line:
+                time_model_checking += float(line.split(model_checking_string)[-1].split('s.')[0])
+    
+    # auxtimestart = time.process_time()
+    auxtimestart = datetime.datetime.now()
+    aux = client.containers.run("lposch/tempest-devel-traces:latest", f"storm --prism program_{strat_name}.pm --prop prism_files/dtmc_props.props --trace-input trace_input.txt --exportresult dtmc_{strat_name}_props.json --buildstateval", volumes = {os.getcwd(): {'bind': '/mnt/vol1', 'mode': 'rw'}}, working_dir = "/mnt/vol1", stderr = True)
+    dockertime += (datetime.datetime.now() - auxtimestart).total_seconds()
+    outstr = aux.decode("utf-8")
+    with open('merda.txt', 'a') as fp:
+            fp.write(outstr)
+    for line in outstr.split('\n'):
+        if model_construction_string in line:
+            time_model_construction += float(line.split(model_construction_string)[-1].split('s.')[0])
+        if model_checking_string in line:
+            time_model_checking += float(line.split(model_checking_string)[-1].split('s.')[0])
+    # dockertime += time.process_time() - auxtimestart
+    if DEBUG:
+        print(f"Time spent in docker is {dockertime} sec.\n")
+        print(f"Time spent in model_construction is {time_model_construction} sec.\n")
+        print(f"Time spent in model_checking is {time_model_checking} sec.\n")
 
     names = [f'dtmc_{strat_name}_','mdp','1mdp']
     pminmax = []*len(names)
@@ -207,3 +246,5 @@ for i in range(len(strat_list)):
 
 
 graph_generator.main(df1array, strat_list)
+if DEBUG:
+    print(f"Total python execution time is {(datetime.datetime.now() - totalstart).total_seconds()} seconds.\n")

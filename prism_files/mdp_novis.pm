@@ -45,7 +45,7 @@ formula car_close_ped = (ped_x - car_x < 2*car_v);
 
 module Car
 car_x : [min_street_length..street_length] init 25; //{car_x};
-car_v : [0..max_speed] init 0;
+car_v : [0..max_speed] init max_speed-1;
 finished : [0..1] init 0;
 
     // changes the visibility variable so we know when the car is able/unable to see ped
@@ -62,9 +62,9 @@ finished : [0..1] init 0;
 	0.10: (car_x' = min(street_length, car_x + car_v + 0))&(turn' = 2);
 	
 	[nop] (turn = 1) & (finished=0) & (car_x < street_length) & (!crash) -> // Stays the same speed
-	0.90: (car_x' = min(street_length, car_x + max(0, car_v)))&(turn' = 2) +
-	0.05: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 2) +  //breaks
-	0.05: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 2); //accelerates
+	0.80: (car_x' = min(street_length, car_x + max(0, car_v)))&(turn' = 2) +
+	0.10: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 2) +  //breaks
+	0.10: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 2); //accelerates
 
 	[] (turn = 1) & (finished = 0) & ((car_x = street_length) | (crash)) -> (finished'=1);
 	[] (turn = 1) & (finished = 1) -> true;
