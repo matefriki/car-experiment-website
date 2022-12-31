@@ -142,19 +142,21 @@ for i in range(len(strat_list)):
         mdpprogram = mdptemp.format(person_x = person_x, person_y = person_y, car_x = car_x, car_y = car_y, top_corner_x = top_corner_x, top_corner_y = top_corner_y,  bottom_corner_x = bottom_corner_x, bottom_corner_y = bottom_corner_y)
         with open("mdpprogram.pm", "w") as fp:
             fp.write(mdpprogram)
+        trace_filepath = "temp/path.txt"
         if os.path.exists(f'traces/{trace_name}.txt'):
-            path = load_path(f'traces/{trace_name}.txt')
+            trace_filepath = f'traces/{trace_name}.txt'
         else:
-            os.system("{} program_{}.pm -simpath {} temp/path.txt >/dev/null 2>&1".format(prism_path, strat_name, path_length)) # >/dev/null 2>&1
+            os.system("{} mdpprogram.pm -simpath {} {} >/dev/null 2>&1".format(prism_path, path_length, trace_filepath)) # >/dev/null 2>&1
             time.sleep(.1)
-            path = load_path("temp/path.txt")
+        path = load_path(trace_filepath)
         if not USE_VISIBILITY:
             path["visibility"] = [1 for i in range(len(path["action"]))]
             path["seen_ped"] = [1 for i in range(len(path["action"]))]
         print(json.dumps(path))
 
+
         # os.system("python3 trace_convert.py")
-        ordered_list_of_states = trace_convert.main()
+        ordered_list_of_states = trace_convert.main(trace_filepath, USE_VISIBILITY)
         # auxtimestart = time.process_time()
         auxtimestart = datetime.datetime.now()
         client = docker.from_env()     
@@ -242,7 +244,7 @@ for i in range(len(strat_list)):
             rmax = 0 # r is maintained for backwards compatibility, not computed anymore
             df1.loc[i,:] = [pmin, pmax, p, rmin, rmax, r]
     df1array.append(df1)
-
+    df1.to_csv(f'temp/data_{strat_name}.csv')
 
 
 graph_generator.main(df1array, strat_list)

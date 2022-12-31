@@ -2,9 +2,9 @@ import re
 import json
 
 
-def main():
+def main(filepath = "temp/path.txt", USE_VISIBILITY=False):
 
-    file = open("temp/path.txt", "r")
+    file = open(filepath, "r")
     lines = [line.strip().replace('-', 'Pedestrian') for line in file.readlines()]
     file.close()
 
@@ -34,7 +34,7 @@ def main():
             lines[j] = ""
         if ((label_match1 != None) | (label_match2 != None)) & (j <= length):
             
-            if [f"{key}={dict[key][j-1]}" for key in dict][0] == 'turn=0':
+            if [f"{key}={dict[key][j-1]}" for key in dict][0] == 'turn=2':  #turn=2 checks when car turn has just ended
                 # trace_dict.update(dict)
                 count += 1
                 arr.append([f"{key}={dict[key][j-1]}" for key in dict])
@@ -53,6 +53,10 @@ def main():
     # print(lines)
 
     replaced = '\n'.join(lines)
+    if not USE_VISIBILITY:
+        replaced = re.sub("\&\s*visibility\s*\=\s*[0-1]\s*", "", replaced)
+        replaced = re.sub("\&\s*seen_ped\s*\=\s*[0-1]\s*", "", replaced)
+
     with open("trace_input.txt", "w") as f:
         f.write(replaced)
     # slicing("trace_input.txt")

@@ -22,14 +22,14 @@ def firstPlot(dfarray, states, state_ticks, state_labels, idx=0, strat_names=['s
 
     # plotting data
     axs1.fill_between(states, dfarray[0]['Pmin'], dfarray[0]['Pmax'], color = '#DBDBDB')
-    axs1.plot(states, dfarray[0]['Pmin'], color = '#1a4314', marker = 'o', label = "Pmin", zorder=10, clip_on=False)
-    axs1.plot(states, dfarray[0]['Pmax'], color = '#8d0000', marker = 'o', label = "Pmax", zorder=10, clip_on=False)
+    axs1.plot(states, dfarray[0]['Pmin'], color = '#1a4314', marker = 'o', label = "Pmin", zorder=10, clip_on=False, alpha=0.5)
+    axs1.plot(states, dfarray[0]['Pmax'], color = '#8d0000', marker = 'o', label = "Pmax", zorder=10, clip_on=False, alpha=0.5)
 
     # make a P line for each strategy chosen by user, new color, df will be new, new label
     for i in range(len(dfarray)):
         df = dfarray[i]
         strat_name = strat_names[i]
-        axs1.plot(states, df['P'], color = COLORBOX[i%len(COLORBOX)], marker = 'o', label = strat_name, zorder=10, clip_on=False)
+        axs1.plot(states, df['P'], color = COLORBOX[i%len(COLORBOX)], marker = 'o', label = strat_name, zorder=10, clip_on=False, alpha=0.5)
 
 
     axs1.vlines(idx,0,1)

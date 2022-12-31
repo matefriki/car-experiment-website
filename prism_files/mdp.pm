@@ -70,6 +70,9 @@ formula car_close_crosswalk = ((car_x > crosswalk_pos - 10) & (car_x < crosswalk
 formula car_close_block = ((car_x > block_x1 - 5) & (car_x < block_x2));
 formula car_close_ped = (ped_x - car_x < 2*car_v);
 
+formula allowed_to_brake = (car_v > 0) & (ped_x > car_x) & (dist < 15);
+// formula allowed_to_noop = (car_v > 0) & (ped_x > car_x) & (dist < 20);
+
 module Car
 car_x : [min_street_length..street_length] init 25; //{car_x};
 car_v : [0..max_speed] init 0;
@@ -88,15 +91,15 @@ seen_ped : [0..1] init 0;
 	0.45: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 2) +
 	0.10: (car_x' = min(street_length, car_x + car_v + 0))&(turn' = 2);
 
-	[brake] (turn = 1) & (finished=0) & (car_x < street_length) & (!crash) -> //& (car_v > 0) -> // Brake
+	[brake] (turn = 1) & (finished=0) & (car_x < street_length) & (!crash)  & (allowed_to_brake) -> //& (car_v > 0) -> // Brake
 	0.45: (car_v' = max(0, car_v - 2))&(car_x' = min(street_length, car_x + max(0, car_v - 2)))&(turn' = 2) + 
 	0.45: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 2) +
 	0.10: (car_x' = min(street_length, car_x + car_v + 0))&(turn' = 2);
 	
-	[nop] (turn = 1) & (finished=0) & (car_x < street_length) & (!crash) -> // Stays the same speed
-	0.90: (car_x' = min(street_length, car_x + max(0, car_v)))&(turn' = 2) +
-	0.05: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 2) +  //breaks
-	0.05: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 2); //accelerates
+	[nop] (turn = 1) & (finished=0) & (car_x < street_length) & (!crash)  & (allowed_to_brake) -> // Stays the same speed
+	0.80: (car_x' = min(street_length, car_x + max(0, car_v)))&(turn' = 2) +
+	0.10: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 2) +  //breaks
+	0.10: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 2); //accelerates
 
 	[] (turn = 1) & (finished = 0) & ((car_x = street_length) | (crash)) -> (finished'=1);
 	[] (turn = 1) & (finished = 1) -> true;
