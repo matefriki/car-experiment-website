@@ -27,7 +27,7 @@ def nice_parenthesis(instring):
     return result
 
 # generates runnable mdp file
-def make_mdp(temp):
+def make_mdp(temp, hesitant_pedestrian):
     file = open(temp, "r")
     lines = [line.strip() for line in file.readlines()]
     file.close()
@@ -43,6 +43,12 @@ def make_mdp(temp):
         # resets car action labels to [], originally set to label for importing strategies
         if strat_match:
             lines[i] = re.sub(strat_regex, "[]", lines[i])
+        # hesitant pedestrian part: if not hesitant, danger formulas set to false
+        if not hesitant_pedestrian:
+            if "formula danger_to_cross" in line:
+                lines[i] = "formula danger_to_cross = false;"
+            if "formula danger_to_stay" in line:
+                lines[i] = "formula danger_to_stay = false;"
 
     # rewrites lines into new file
     replaced = '\n'.join(lines)
@@ -50,7 +56,7 @@ def make_mdp(temp):
         f.write(replaced)
 
 # generates DTMC files for a dictionary and file input
-def make_dtmc(temp, use_visibility=False):
+def make_dtmc(temp, use_visibility=False, hesitant_pedestrian=False):
     strats = open('strategy.json')
     strategy = json.load(strats) ## this is a dict, keys are names of strategies
 
@@ -78,6 +84,12 @@ def make_dtmc(temp, use_visibility=False):
                 start_ind = line.rfind("init") + 4 if "init" in line else line.rfind("=") + 1
                 label = label_match.group(1)
                 lines[i] = line[:start_ind] + " {{{}}};".format(label)
+            # hesitant pedestrian part: if not hesitant, danger formulas set to false
+            if not hesitant_pedestrian:
+                if "formula danger_to_cross" in line:
+                    lines[i] = "formula danger_to_cross = false;"
+                if "formula danger_to_stay" in line:
+                    lines[i] = "formula danger_to_stay = false;"
             # finds strategy labels in PRISM file "[accelerate]..." and adds in corresponding guard
             strat_match = strategies_label.search(line)
             if strat_match:
@@ -90,7 +102,7 @@ def make_dtmc(temp, use_visibility=False):
         
 
 
-def main(prism_file="", use_visibility=False):
+def main(prism_file="", use_visibility=False, hesitant_pedestrian=False):
    
 
     # If prism file is given (executing normally should be prism_files/mdp.pm), use it. If empty, ask user for it.
@@ -98,9 +110,9 @@ def main(prism_file="", use_visibility=False):
         prism_file = input("Model file to convert to template: ") # use this to give manual input to convert 
 
     # makes ones mdp file
-    make_mdp(prism_file)
+    make_mdp(prism_file, hesitant_pedestrian = hesitant_pedestrian)
     # makes one dtmc file per strategy listed in the json file
-    make_dtmc(prism_file, use_visibility = use_visibility)
+    make_dtmc(prism_file, use_visibility = use_visibility, hesitant_pedestrian = hesitant_pedestrian)
 
     # 
     # for strat in strategy:

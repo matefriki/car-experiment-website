@@ -36,7 +36,9 @@ label "givereward" = ((finished=0) & (car_x = street_length));
 formula dist_ped = ((x2 - x1)*(x2 - x1)) + ((y2 - y1)*(y2 - y1));
 formula car_fast = (dist_ped <= ((car_v*car_v) + car_v)/2);
 
-formula dist = max(ped_x-car_x, car_x - ped_x) + max(ped_y - car_y, car_y - ped_y);	
+formula dist_x = max(ped_x-car_x, car_x - ped_x);
+formula dist_y = max(ped_y - car_y, car_y - ped_y);
+formula dist = dist_x + dist_y;	
 formula safe_dist = dist > 15;
 
 formula wait_prob = (crosswalk_pos - ped_x) / 10;
@@ -69,6 +71,8 @@ formula no_vis = left_blocked | top_blocked;
 formula car_close_crosswalk = ((car_x > crosswalk_pos - 10) & (car_x < crosswalk_pos + crosswalk_width));
 formula car_close_block = ((car_x > block_x1 - 5) & (car_x < block_x2));
 formula car_close_ped = (ped_x - car_x < 2*car_v);
+formula car_close_ped_rv = (ped_x - car_x < 2*(car_v-1)); // rv: reckless version
+formula is_within_shot = (ped_y >= car_y) & (ped_y <= car_y + car_height);
 
 formula allowed_to_brake = (car_v > 0) & (ped_x > car_x) & (dist < 15);
 // formula allowed_to_noop = (car_v > 0) & (ped_x > car_x) & (dist < 20);
@@ -110,22 +114,34 @@ endmodule
 
 // formula move_xx_yy_zz = xx: (ped_x' = min(street_length, ped_x+1))&(turn'=0) + yy: (ped_y'=min(world_height, ped_y+1))&(turn'=0) + zz: (turn'=0);
 formula is_on_sidewalk = (ped_y <= sidewalk_height) | (ped_y >= sidewalk_height + crosswalk_height);
+formula is_on_sidewalk_rv = (ped_y <= sidewalk_height+1) | (ped_y >= sidewalk_height + crosswalk_height); // rv : reckless version
 formula blocked_path = (ped_x >= block_x1) & (ped_x <= block_x2);
 formula on_crosswalk = (ped_x >= crosswalk_pos) & (ped_x <= crosswalk_pos+crosswalk_height);
+
+// Hesitant pedestrian takes into account if there is danger to cross or to stay.
+// Can only affect when pedestrian is not on sidewalk anymore
+formula danger_to_cross = (car_close_ped) & (car_v > 2) & (car_y - ped_y = 1);
+formula danger_to_stay = (car_close_ped) & (car_v > 2) & (car_y - ped_y < 1) & (car_y+car_height >= ped_y);
+const double hesitat_prob = 0.4;
 
 module Pedestrian
 	ped_x : [min_street_length..street_length] init (crosswalk_pos - 5); // {person_x}
 	ped_y : [0..world_height] init 0; // {person_y}
 
-	[] (turn = 2)&(!is_on_sidewalk) -> 0.7: (ped_y'=min(world_height, ped_y+1))&(turn'=0) + 0.3: (turn'=0);
+	// When pedestrian is not on sidewalk anymore, can only stop or cross, cannot go back
+	// If hesitant, checks if it is unsafe to stop or cross and reduces probabilities by hesitant_prob
+	[] (turn = 2)&(!is_on_sidewalk)&(!danger_to_cross)&(!danger_to_stay) -> 0.7: (ped_y'=min(world_height, ped_y+1))&(turn'=0) + 0.3: (turn'=0);
+	[] (turn = 2)&(!is_on_sidewalk)&(danger_to_cross) -> 0.7*hesitat_prob: (ped_y'=min(world_height, ped_y+1))&(turn'=0) + 1-0.7*hesitat_prob: (turn'=0);
+	[] (turn = 2)&(!is_on_sidewalk)&(danger_to_stay) -> 1-0.3*hesitat_prob: (ped_y'=min(world_height, ped_y+1))&(turn'=0) + 0.3*hesitat_prob: (turn'=0);
 	
-//	[] (turn=2)&(is_on_sidewalk)&(blocked_path) ->	0.5: (ped_x' = min(street_length, ped_x+1))&(turn'=0) + 0.3: (ped_x' = max(0, ped_x-1))&(turn'=0) + 0.2: (turn'=0);
+	// When pedestrian is on sidewalk with blocked path, can only advance or stop
 	[] (turn=2)&(is_on_sidewalk)&(blocked_path) ->	0.8: (ped_x' = min(street_length, ped_x+1))&(turn'=0)  + 0.2: (turn'=0);
 
-
+	// When pedestrian is on sidewalk and crosswalk, starts crossing with high probability
 	[] (turn=2)&(is_on_sidewalk)&(!blocked_path)&(on_crosswalk) ->
 	0.45: (ped_x' = min(street_length, ped_x+1))&(turn'=0) + 0.45: (ped_y'=min(world_height, ped_y+1))&(turn'=0) + 0.1: (turn'=0);
 
+	// When pedestrian is on sidewalk and not crosswalk, starts crossing with low probability
 	[] (turn=2)&(is_on_sidewalk)&(!blocked_path)&(!on_crosswalk) ->
 	0.8: (ped_x' = min(street_length, ped_x+1))&(turn'=0) + 0.1: (ped_y'=min(world_height, ped_y+1))&(turn'=0) + 0.1: (turn'=0);
 

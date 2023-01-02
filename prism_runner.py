@@ -12,6 +12,10 @@ import trace_convert
 import graph_generator
 import pickle
 
+DEBUG = False # Turning this Debug flag to true gives you more input, and may mess up main.js
+USE_VISIBILITY = True
+HESITANT_PEDESTRIAN = True
+
 # totalstart = time.process_time()
 totalstart = datetime.datetime.now()
 
@@ -33,8 +37,41 @@ def load_path(file_name):
     return path
 
 
-DEBUG = False # Turning this Debug flag to true gives you more input, and may mess up main.js
-USE_VISIBILITY = False
+def modify_inits(data_path, trace_path):
+    """
+    Modifies the inits so that all states in the trace are counted as initial states
+    """
+    with open(data_path, 'r') as fp:
+        data = fp.read()
+    with open(trace_path, 'r') as fp:
+        trace = fp.read()
+
+    i = 0
+    init_to_remove = []
+    
+    while (i < len(data)-4):
+        if (data[i] == 'i') and (data[i+1] == 'n') and (data[i+2] == 'i') and (data[i+3] == 't'):
+            j = i+3
+            while (data[j] != ';'):
+                j += 1
+            init_to_remove.append((i,j))
+        i += 1
+    newstr = ""
+    idx = 0
+    for i in range(len(init_to_remove)):
+        newstr += data[idx:init_to_remove[i][0]]
+        idx = init_to_remove[i][1]
+    newstr += data[idx:] + '\n\ninit\n'
+    for i in range(len(trace.split('\n'))):
+        initcondition = trace.split('\n')[i]
+        if i != 0:
+            newstr += "|\n"
+        newstr += f'({initcondition})'
+    newstr += "\nendinit"
+
+    with open(data_path, 'w') as fp:
+        fp.write(newstr)
+
 
 # Ranges for all state variables (inclusive) in order of input
 ranges = [
@@ -92,7 +129,11 @@ strat_files = {
     "car1":"temp/dtmc_car1.pm",
     "car2":"temp/dtmc_car2.pm",
     "car3":"temp/dtmc_car3.pm",
-    "car4":"temp/dtmc_car4.pm"
+    "car4":"temp/dtmc_car4.pm", 
+    "corrupt":"temp/dtmc_corrupt.pm",
+    "reckless":"temp/dtmc_reckless.pm",
+    "accelerator":"temp/dtmc_accelerator.pm",
+    "braker":"temp/dtmc_braker.pm"
 }
 
 strat_list = strategies.split(",")
@@ -103,15 +144,12 @@ for strat_name in strat_list:
     if strat_name not in strat_files:
         sys.exit("Invalid input: strategy does not exist")
 
-# check if mpggenerated is there. If not, creates it in temp folder, along with dtmc files
 path_to_generated_mdp = "temp/mdpgenerated.pm"
-# if not os.path.exists(path_to_generated_mdp) or True:
-#     strat_generator.main("prism_files/mdp.pm", use_visibility = USE_VISIBILITY)
 
 if USE_VISIBILITY:
-    strat_generator.main("prism_files/mdp.pm", use_visibility = USE_VISIBILITY)
+    strat_generator.main("prism_files/mdp.pm", use_visibility = USE_VISIBILITY, hesitant_pedestrian = HESITANT_PEDESTRIAN)
 else:
-    strat_generator.main("prism_files/mdp_novis.pm", use_visibility = USE_VISIBILITY)
+    strat_generator.main("prism_files/mdp_novis.pm", use_visibility = USE_VISIBILITY, hesitant_pedestrian = HESITANT_PEDESTRIAN)
 
 df1array = []
 
@@ -157,6 +195,7 @@ for i in range(len(strat_list)):
 
         # os.system("python3 trace_convert.py")
         ordered_list_of_states = trace_convert.main(trace_filepath, USE_VISIBILITY)
+        modify_inits('mdpprogram.pm', 'trace_input.txt')
         # auxtimestart = time.process_time()
         auxtimestart = datetime.datetime.now()
         client = docker.from_env()     
@@ -172,6 +211,7 @@ for i in range(len(strat_list)):
             if model_checking_string in line:
                 time_model_checking += float(line.split(model_checking_string)[-1].split('s.')[0])
     
+    modify_inits(f'program_{strat_name}.pm', 'trace_input.txt')
     # auxtimestart = time.process_time()
     auxtimestart = datetime.datetime.now()
     aux = client.containers.run("lposch/tempest-devel-traces:latest", f"storm --prism program_{strat_name}.pm --prop prism_files/dtmc_props.props --trace-input trace_input.txt --exportresult dtmc_{strat_name}_props.json --buildstateval", volumes = {os.getcwd(): {'bind': '/mnt/vol1', 'mode': 'rw'}}, working_dir = "/mnt/vol1", stderr = True)

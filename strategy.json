@@ -1,29 +1,39 @@
 {
  "cautious": {
- "[accelerate]": "(((!allowed_to_brake)) | ( ( (seen_ped=1) & (visibility = 1) ) & ( ( ( is_on_sidewalk ) & ( (car_x - ped_x) > (2*car_v) ) ) | ( ( (car_x - ped_x) <= (2*car_v) ) & ( car_v < 2 ) ) ) ) | ( ( (seen_ped=1) & (visibility = 0) ) & ( ( ( is_on_sidewalk ) & ( (car_x - block_x2) > (2*car_v) ) ) | ( ( (car_x - block_x2) <= (2*car_v) ) & ( car_v < 2 ) ) ) ) | ( (seen_ped=0) & (visibility = 0) ) )",
- "[brake]": "( ( ( (seen_ped=1) & (visibility = 1) ) & ( ( car_v > 0 ) & ( ( (car_x - ped_x) <= (2*car_v) ) & ( car_v > 2 ) ) | ( ( !is_on_sidewalk ) & ( car_x < ped_x ) ) ) ) | ( ( (seen_ped=1) & (visibility = 0) ) & ( ( car_v > 0 ) & ( ( (car_x - block_x2) <= (2*car_v) ) & ( car_v > 2 ) ) | ( ( !is_on_sidewalk ) & ( car_x < block_x2 ) ) ) ) )",
- "[nop]": "( ( ( (seen_ped=1) & (visibility = 1) ) & ( ( ( (car_x - ped_x) <= (2*car_v) ) & ( car_v = 2 ) ) | ( !is_on_sidewalk & (car_x >= ped_x) ) ) ) | ( ( (seen_ped=1) & (visibility = 0) ) & ( ( ( (car_x - block_x2) <= (2*car_v) ) & ( car_v = 2 ) ) | ( !is_on_sidewalk & (car_x >= block_x2) ) ) ) )"
- },
- "risky": {
- "[accelerate]": "test acc",
- "[brake]": "test break",
- "[nop]": "test nop"
- },
- "car1": {
- "[accelerate]": "(((!allowed_to_brake)) |( !((!is_on_sidewalk)&(visibility=1)))&!(car_close_crosswalk) ) | ( !((!is_on_sidewalk)&(visibility=1)))&(car_close_crosswalk)&(car_v < 2) ))",
- "[brake]": "(((!is_on_sidewalk)&(visibility=1))) | (!((!is_on_sidewalk)&(visibility=1)))&(car_close_crosswalk)&(car_v > 2)))",
- "[nop]": "(!((!is_on_sidewalk)&(visibility=1)))&(car_close_crosswalk)&(car_v = 2))"
- },
- "car3": {
  "[accelerate]": "(((!allowed_to_brake)) | ((seen_ped=0)) | ((seen_ped=1)&(visibility=0)&(!car_close_block)) | ((seen_ped=1)&(visibility=0)&(car_close_block)&(car_v < 2)) | ((seen_ped=1)&(visibility=1)&(is_on_sidewalk)&(!car_close_ped)) | ((seen_ped=1)&(visibility=1)&(is_on_sidewalk)&(car_close_ped)&(car_v < 2)))",
  "[brake]": "(((seen_ped=1)&(visibility=0)&(car_close_block)&(car_v > 2)) | ((seen_ped=1)&(visibility=1)&(!is_on_sidewalk)) | ((seen_ped=1)&(visibility=1)&(is_on_sidewalk)&(car_close_ped)&(car_v > 2)))",
  "[nop]": "(((seen_ped=1)&(visibility=0)&(car_close_block)&(car_v = 2)) | ((seen_ped=1)&(visibility=1)&(is_on_sidewalk)&(car_close_ped)&(car_v = 2)))"
  },
- "car4": {
- "[accelerate]": "(((!allowed_to_brake)) | ((visibility=0)) | ((visibility=1)&(is_on_sidewalk)&(!car_close_ped)) | ((visibility=1)&(is_on_sidewalk)&(car_close_ped)&(car_v < 2)))",
- "[brake]": "(((visibility=1)&(!is_on_sidewalk)) | ((visibility=1)&(is_on_sidewalk)&(car_close_ped)&(car_v > 2)))",
- "[nop]": "(((visibility=1)&(is_on_sidewalk)&(car_close_ped)&(car_v = 2)))"
- }
+ "reckless": {
+    "[accelerate]": "(((!allowed_to_brake)) | ((visibility=0)) | ((visibility=1)&(is_on_sidewalk_rv)&(!car_close_ped_rv)) | ((visibility=1)&(is_on_sidewalk_rv)&(car_close_ped_rv)&(car_v < 3)))",
+    "[brake]": "(((visibility=1)&(!is_on_sidewalk_rv)) | ((visibility=1)&(is_on_sidewalk_rv)&(car_close_ped_rv)&(car_v > 3)))",
+    "[nop]": "(((visibility=1)&(is_on_sidewalk_rv)&(car_close_ped_rv)&(car_v = 3)))"
+},
+ "corrupt": {
+    "[accelerate]": "((!allowed_to_brake) | (is_within_shot) | (dist - car_v > 5))",
+    "[brake]": "(!(is_within_shot) & (dist - car_v < 5))",
+    "[nop]": "(!(is_within_shot) & (dist - car_v = 5))"
+},
+"accelerator": {
+    "[accelerate]": "true",
+    "[brake]": "false",
+    "[nop]": "false"
+},
+"braker": {
+    "[accelerate]": "(!allowed_to_brake)",
+    "[brake]": "true",
+    "[nop]": "false"
+},
+"car1": {
+    "[accelerate]": "(((!allowed_to_brake)) |( !((!is_on_sidewalk)&(visibility=1)))&!(car_close_crosswalk) ) | ( !((!is_on_sidewalk)&(visibility=1)))&(car_close_crosswalk)&(car_v < 2) ))",
+    "[brake]": "(((!is_on_sidewalk)&(visibility=1))) | (!((!is_on_sidewalk)&(visibility=1)))&(car_close_crosswalk)&(car_v > 2)))",
+    "[nop]": "(!((!is_on_sidewalk)&(visibility=1)))&(car_close_crosswalk)&(car_v = 2))"
+},
+"car4": {
+    "[accelerate]": "(((!allowed_to_brake)) | ((visibility=0)) | ((visibility=1)&(is_on_sidewalk)&(!car_close_ped)) | ((visibility=1)&(is_on_sidewalk)&(car_close_ped)&(car_v < 2)))",
+    "[brake]": "(((visibility=1)&(!is_on_sidewalk)) | ((visibility=1)&(is_on_sidewalk)&(car_close_ped)&(car_v > 2)))",
+    "[nop]": "(((visibility=1)&(is_on_sidewalk)&(car_close_ped)&(car_v = 2)))"
+}
 }
 
 
