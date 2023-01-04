@@ -13,7 +13,7 @@ import graph_generator
 import pickle
 
 DEBUG = False # Turning this Debug flag to true gives you more input, and may mess up main.js
-USE_VISIBILITY = True
+USE_VISIBILITY = False
 HESITANT_PEDESTRIAN = True
 
 # totalstart = time.process_time()

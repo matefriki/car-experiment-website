@@ -382,7 +382,7 @@ function setReplayActive(active) {
 // Enable or disable both html controls and draggable object in Pixi scene, depending on whether "active" is true or false
 function setControlsActive(active) {
     // Hide the randomize buttons and dropdowns with fade animation
-    let randBtns = document.body.querySelectorAll('.random, .dropdown-component');
+    let randBtns = document.body.querySelectorAll('.random');
     randBtns.forEach((rand) => {
         if (active) rand.classList.remove("fully-hidden");
         else rand.classList.add("fully-hidden");
@@ -531,7 +531,7 @@ function animatePath(path) {
     ticker.add((delta) => {
         time += delta;
         // Set the speed the animation will run at (larger is slower)
-        if (time > 5) {
+        if (time > 20) {
             // Make animation play in a loop
             path_ind++;
 

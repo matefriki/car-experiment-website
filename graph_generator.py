@@ -91,7 +91,7 @@ def main(df1array, strat_names = ['strategy']):
     for i in range(len(df1array)):
         df1 = df1array[i]
         idx = df1.index[-1]
-        eps = 0.01
+        eps = 0.005
         rodiff11 = df1['Pmax'] - df1['Pmin']
 
         while idx > 0:

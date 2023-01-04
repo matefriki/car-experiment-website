@@ -21,14 +21,16 @@ const int block_x2 = block_x1 + block_width; // {top_corner_x}
 const int block_y2 = sidewalk_height + block_height; //{top_corner_y}
  
 // car properties
-const int car_height = 1; // was two
+const int car_height = 2; // was two
 const int car_width = 3;
 const int car_y = 5; // {car_y}
 
 global turn : [0..2] init 0;
+global crashed :[0..1] init 0;
 
-// simple bubble of ped and car within a certain distance of each other
-formula crash = ((ped_x >= car_x) & (ped_x <= car_x + car_width)) & ((ped_y >= car_y) & (ped_y <= car_y + car_height));
+// crash can only happen when car has just moved (turn =2 & car_v > 0)
+// in that case, a crash happens if the tip of the cad (car_x + car_height) moves from being behind to being in front of pedestrian
+formula crash = (turn=2) &  (car_v > 0) & ((ped_x >= car_x+car_width-car_v) & (ped_x <= car_x + car_width)) & ((ped_y >= car_y) & (ped_y <= car_y + car_height));
 
 label "crash" = crash;
 label "givereward" = ((finished=0) & (car_x = street_length));
@@ -45,9 +47,10 @@ formula car_close_crosswalk = ((car_x > crosswalk_pos - 10) & (car_x < crosswalk
 formula car_close_block = ((car_x > block_x1 - 5) & (car_x < block_x2));
 formula car_close_ped = (ped_x - car_x < 2*car_v);
 formula car_close_ped_rv = (ped_x - car_x < 2*(car_v-1)); // rv: reckless version
+formula is_within_shot = (ped_y >= car_y) & (ped_y <= car_y + car_height);
 
-
-formula allowed_to_brake = (car_v > 0) & (ped_x > car_x) & (dist < 15);
+// formula allowed_to_brake = (car_v > 0) & (ped_x > car_x) & (dist < 15);
+formula allowed_to_brake = ((car_v > 0) & (dist < 15)) | (dist < 10);
 // formula allowed_to_noop = (car_v > 0) & (ped_x > car_x) & (dist < 15);
 
 module Car
@@ -58,22 +61,22 @@ finished : [0..1] init 0;
     // changes the visibility variable so we know when the car is able/unable to see ped
     [] (turn = 0) -> (turn'=1);
 
-	[accelerate] (turn = 1) & (finished=0) & (car_x < street_length) & (!crash) -> // Accelerate
+	[accelerate] (turn = 1) & (finished=0) & (car_x < street_length) & (crashed=0) -> // Accelerate
 	0.45: (car_v' = min(max_speed, car_v + 2))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 2)))&(turn' = 2) +
 	0.45: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 2) +
 	0.10: (car_x' = min(street_length, car_x + car_v + 0))&(turn' = 2);
 
-	[brake] (turn = 1) & (finished=0) & (car_x < street_length) & (!crash) & (allowed_to_brake) -> //& (car_v > 0) -> // Brake
+	[brake] (turn = 1) & (finished=0) & (car_x < street_length) & (crashed=0) & (allowed_to_brake) -> //& (car_v > 0) -> // Brake
 	0.45: (car_v' = max(0, car_v - 2))&(car_x' = min(street_length, car_x + max(0, car_v - 2)))&(turn' = 2) + 
 	0.45: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 2) +
 	0.10: (car_x' = min(street_length, car_x + car_v + 0))&(turn' = 2);
 	
-	[nop] (turn = 1) & (finished=0) & (car_x < street_length) & (!crash) & (allowed_to_brake)-> // Stays the same speed
+	[nop] (turn = 1) & (finished=0) & (car_x < street_length) & (crashed=0) & (allowed_to_brake)-> // Stays the same speed
 	0.80: (car_x' = min(street_length, car_x + max(0, car_v)))&(turn' = 2) +
 	0.10: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 2) +  //breaks
 	0.10: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 2); //accelerates
 
-	[] (turn = 1) & (finished = 0) & ((car_x = street_length) | (crash)) -> (finished'=1);
+	[] (turn = 1) & (finished = 0) & ((car_x = street_length) | (crashed=1)) -> (finished'=1);
 	[] (turn = 1) & (finished = 1) -> true;
 	
 	 
@@ -98,16 +101,19 @@ module Pedestrian
 
 	// When pedestrian is not on sidewalk anymore, can only stop or cross, cannot go back
 	// If hesitant, checks if it is unsafe to stop or cross and reduces probabilities by hesitant_prob
-	[] (turn = 2)&(!is_on_sidewalk)&(!danger_to_cross)&(!danger_to_stay) -> 0.7: (ped_y'=min(world_height, ped_y+1))&(turn'=0) + 0.3: (turn'=0);
-	[] (turn = 2)&(!is_on_sidewalk)&(danger_to_cross) -> 0.7*hesitat_prob: (ped_y'=min(world_height, ped_y+1))&(turn'=0) + 1-0.7*hesitat_prob: (turn'=0);
-	[] (turn = 2)&(!is_on_sidewalk)&(danger_to_stay) -> 1-0.3*hesitat_prob: (ped_y'=min(world_height, ped_y+1))&(turn'=0) + 0.3*hesitat_prob: (turn'=0);
+	[] (turn = 2)&(!crash)&(!is_on_sidewalk)&(!danger_to_cross)&(!danger_to_stay) -> 0.7: (ped_y'=min(world_height, ped_y+1))&(turn'=0) + 0.3: (turn'=0);
+	[] (turn = 2)&(!crash)&(!is_on_sidewalk)&(danger_to_cross) -> 0.7*hesitat_prob: (ped_y'=min(world_height, ped_y+1))&(turn'=0) + 1-0.7*hesitat_prob: (turn'=0);
+	[] (turn = 2)&(!crash)&(!is_on_sidewalk)&(danger_to_stay) -> 1-0.3*hesitat_prob: (ped_y'=min(world_height, ped_y+1))&(turn'=0) + 0.3*hesitat_prob: (turn'=0);
 	
 	// When pedestrian is on sidewalk and crosswalk, starts crossing with high probability
-	[] (turn=2)&(is_on_sidewalk)&(on_crosswalk) ->
+	[] (turn=2)&(!crash)&(is_on_sidewalk)&(on_crosswalk) ->
 	0.45: (ped_x' = min(street_length, ped_x+1))&(turn'=0) + 0.45: (ped_y'=min(world_height, ped_y+1))&(turn'=0) + 0.1: (turn'=0);
 
 	// When pedestrian is on sidewalk and not crosswalk, starts crossing with low probability
-	[] (turn=2)&(is_on_sidewalk)&(!on_crosswalk) ->
+	[] (turn=2)&(!crash)&(is_on_sidewalk)&(!on_crosswalk) ->
 	0.8: (ped_x' = min(street_length, ped_x+1))&(turn'=0) + 0.1: (ped_y'=min(world_height, ped_y+1))&(turn'=0) + 0.1: (turn'=0);
+
+	// If car has crashed, simulation goes to end
+	[] crash -> (crashed'=1)&(turn'=1);
 
 endmodule
