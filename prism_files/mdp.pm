@@ -33,9 +33,6 @@ formula crash = ((ped_x >= car_x) & (ped_x <= car_x + car_width)) & ((ped_y >= c
 label "crash" = crash;
 label "givereward" = ((finished=0) & (car_x = street_length));
 
-formula dist_ped = ((x2 - x1)*(x2 - x1)) + ((y2 - y1)*(y2 - y1));
-formula car_fast = (dist_ped <= ((car_v*car_v) + car_v)/2);
-
 formula dist_x = max(ped_x-car_x, car_x - ped_x);
 formula dist_y = max(ped_y - car_y, car_y - ped_y);
 formula dist = dist_x + dist_y;	
@@ -44,29 +41,31 @@ formula safe_dist = dist > 15;
 formula wait_prob = (crosswalk_pos - ped_x) / 10;
 
 // for calculating if pedestrian is blocked from car view
-formula x1 = car_x + car_width;
-formula y1 = car_y;
-formula x2 = ped_x;
-formula y2 = ped_y;
+formula cx = car_x + car_width;
+formula cy = car_y+car_height/2;
 
+// for visibility check
+// formula d(bx, by) = (bx - cx)*(ped_y-cy) - (by - cy)*(ped_x-cx)
+// if d(bx,by) < 0, point (bx,by) lies to the right of the visibility line
+// if d(bx,by) > 0, point (bx,by) lies to the left of the visibility line
 
-// new visibility criteria
-formula car_left = (x1 < block_x1);
-formula block_line = ((block_y2 - block_y1)/(block_x2 - block_x1))*(ped_x - block_x1) + block_y1;
-//formula ped_right = block_line > ped_y;
-formula ped_right = ((y2 - block_y2)*(block_x2 - block_x1) <= (x2 - block_x2)*(block_y2 - block_y1));
-formula car_line1 = ((block_y1 - y1)/(block_x1 - x1))*(ped_x - x1) + y1;
-formula car_line2 = ((block_y2 - y1)/(block_x2 - x1))*(ped_x - x1) + y1;
-formula same_side1 = ((car_line1 > ped_y) & (car_line2 > ped_y)) | ((car_line1 < ped_y) & (car_line2 < ped_y));
-//formula same_side1 = (((((y2 - block_y2)*(block_y2 - y1) - (x2 - block_x2)*(block_x2 - x1)) >= 0) & (((y2 - block_y1)*(block_y1 - y1) - (x2 - block_x1)*(block_x1 - x1)) >= 0)) | (((y2 - block_y2)*(block_y2 - y1) - (x2 - block_x2)*(block_x2 - x1)) < 0) & (((y2 - block_y1)*(block_y1 - y1) - (x2 - block_x1)*(block_x1 - x1)) < 0));
-formula left_blocked = car_left & ped_right & !same_side1;
+formula car_left = cx <= block_x1;
+formula car_right = cx >= block_x2;
+formula car_middle = (cx >= block_x1) & (cx <= block_x2);
+formula ped_left = ped_x <= block_x1;
+formula ped_right = ped_x >= block_x2;
 
-formula car_top = x1 >= block_x1 & x1 <= block_x2;
-formula ped_down = y2 <= block_y2;
-formula same_side2 = (((((y2 - block_y2)*(block_y2 - y1) - (x2 - block_x2)*(block_x2 - x1)) >= 0) & (((y2 - block_y2)*(block_y2 - y1) - (x2 - block_x1)*(block_x1 - x1)) >= 0)) | (((y2 - block_y2)*(block_y2 - y1) - (x2 - block_x2)*(block_x2 - x1)) < 0) & (((y2 - block_y2)*(block_y2 - y1) - (x2 - block_x1)*(block_x1 - x1)) < 0));
-formula top_blocked = car_top & ped_down & !same_side2;
+formula d_x1y1 = (block_x1 - cx)*(ped_y-cy) - (block_y1 - cy)*(ped_x-cx);
+formula d_x1y2 = (block_x1 - cx)*(ped_y-cy) - (block_y2 - cy)*(ped_x-cx);
+formula d_x2y1 = (block_x2 - cx)*(ped_y-cy) - (block_y1 - cy)*(ped_x-cx);
+formula d_x2y2 = (block_x2 - cx)*(ped_y-cy) - (block_y2 - cy)*(ped_x-cx);
 
-formula no_vis = left_blocked | top_blocked;
+formula blocked_left = car_left & !ped_left & (d_x1y1 > 0);
+formula blocked_right = car_right & !ped_right & (d_x2y1 < 0);
+formula blocked_middle = car_middle & (d_x1y2>0) & (d_x2y2 <0);
+
+// only consider visiblity blocks when pedestrian is below car
+formula no_vis = (blocked_left | blocked_right |blocked_middle ) & (cy > ped_y);
 
 formula car_close_crosswalk = ((car_x > crosswalk_pos - 10) & (car_x < crosswalk_pos + crosswalk_width));
 formula car_close_block = ((car_x > block_x1 - 5) & (car_x < block_x2));
