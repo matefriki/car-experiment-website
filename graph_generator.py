@@ -5,6 +5,8 @@ from matplotlib import pyplot as plt
 import json
 
 COLORBOX = ['#ca06b8', '#ca9236', '#5132c7', '#3bf48c', '#bed092']
+COLORS_BY_STRAT = {'cautious':'#89a348', 'reckless':'#bd2f9e', 'corrupt':'#1e4054'}
+MARKERS_BY_STRAT = {'cautious': '^', 'reckless':'s', 'corrupt':'X'}
 
 def getProbs(file):
     keys = []
@@ -29,7 +31,9 @@ def firstPlot(dfarray, states, state_ticks, state_labels, idx=0, strat_names=['s
     for i in range(len(dfarray)):
         df = dfarray[i]
         strat_name = strat_names[i]
-        axs1.plot(states, df['P'], color = COLORBOX[i%len(COLORBOX)], marker = 'o', label = strat_name, zorder=10, clip_on=False, alpha=0.5)
+        colorused = COLORBOX[i%len(COLORBOX)] if strat_name not in COLORS_BY_STRAT else COLORS_BY_STRAT[strat_name]
+        markerused = 'o' if strat_name not in MARKERS_BY_STRAT else MARKERS_BY_STRAT[strat_name]
+        axs1.plot(states, df['P'], color = colorused, marker = markerused, label = strat_name, zorder=10, clip_on=False, alpha=0.5)
 
 
     axs1.vlines(idx,0,1)
@@ -63,8 +67,10 @@ def secondPlot(dfarray, states, state_ticks, state_labels, idx=0, strat_names=['
         strat_name = strat_names[i]
         ro1 = []
         ro1 = (df['P'] - df['Pmin'])/(df['Pmax'] - df['Pmin'])
-        axs2.plot(states, ro1, color = COLORBOX[i%len(COLORBOX)], marker = 'o', label = f"rho {strat_name}", zorder=10, clip_on=False)
-        axs2.axhline(y = ro1.mean(), color = COLORBOX[i%len(COLORBOX)], linestyle = '--', label = "rho1 Mean")
+        markerused = 'o' if strat_name not in MARKERS_BY_STRAT else MARKERS_BY_STRAT[strat_name]
+        colorused = COLORBOX[i%len(COLORBOX)] if strat_name not in COLORS_BY_STRAT else COLORS_BY_STRAT[strat_name]
+        axs2.plot(states, ro1, color = colorused, marker = markerused, label = f"rho {strat_name}", zorder=10, clip_on=False)
+        axs2.axhline(y = ro1.mean(), color = colorused, linestyle = '--', label = "rho1 Mean")
 
     # plotting the data
     axs2.bar(states, roDiff, roDiffWidth, color = '#DBDBDB', edgecolor = '#BFBFBF')

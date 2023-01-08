@@ -7,7 +7,7 @@ let spinner;
 let replay_btn;
 let strat_bullet;
 let trace_dropdown;
-let car_input_x, car_input_y;
+let car_input_x, car_input_y, car_input_v;
 let person_input_x, person_input_y;
 let top_input_x, top_input_y, bottom_input_x, bottom_input_y;
 
@@ -42,6 +42,7 @@ window.addEventListener('load', () => {
     let car_inputs = document.body.querySelectorAll('.pane.car .input');
     car_input_x = car_inputs[0];
     car_input_y = car_inputs[1];
+    car_input_v = car_inputs[2];
 
     // Get references to the person's inputs from html
     let person_inputs = document.body.querySelectorAll('.pane.person .input');
@@ -136,7 +137,7 @@ window.addEventListener('load', () => {
 
     // Create sprite for filled block itself
     let block = new PIXI.Graphics();
-    block.beginFill(0xFFFFFF, .5);
+    block.beginFill(0xFFFFFF, 0); //opacity to zero if use_visibility = false
     block.tint = 0x03adfc;
     block.lineStyle(0, 0xFF0000);
     block.drawRect(0, 0, 300, 200);
@@ -416,7 +417,7 @@ function sendGenerateMessage() {
 
     let bottom_point = [Math.min(...x_values), Math.min(...y_values)].map((n) => n.toString());
     let top_point = [Math.max(...x_values), Math.max(...y_values)].map((n) => n.toString());
-    socket.emit('generate', strat_bullet.dataset.value, trace_dropdown.dataset.value, path_length.innerText, person_input_x.innerText, person_input_y.innerText, car_input_x.innerText, car_input_y.innerText, top_point[0], top_point[1], bottom_point[0], bottom_point[1]);
+    socket.emit('generate', strat_bullet.dataset.value, trace_dropdown.dataset.value, path_length.innerText, person_input_x.innerText, person_input_y.innerText, car_input_x.innerText, car_input_y.innerText, car_input_v.innerText, top_point[0], top_point[1], bottom_point[0], bottom_point[1]);
 }
 
 // Handle beginning of drag event

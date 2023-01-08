@@ -119,9 +119,9 @@ body {
     transition: background .2s;
 }
 
-.property.car-velocity {
+/* .property.car-velocity {
     display: none;
-}
+} */
 
 .button {
     font-size: 20px;

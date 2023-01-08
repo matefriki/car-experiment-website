@@ -19,6 +19,8 @@ HESITANT_PEDESTRIAN = True
 # totalstart = time.process_time()
 totalstart = datetime.datetime.now()
 
+print("hola hola\n")
+
 
 def load_path(file_name):
     file = open(file_name, "r")
@@ -76,13 +78,14 @@ def modify_inits(data_path, trace_path):
 # Ranges for all state variables (inclusive) in order of input
 ranges = [
     (1, 300), # path_length
-    (25, 75), # person_x
+    (10, 60), # person_x
     (0, 15),  # person_y
-    (25, 75), # car_x
+    (10, 60), # car_x
     (5, 5),   # car_y
-    (25, 75), # top_corner_x
+    (0, 5),   # car_v
+    (10, 60), # top_corner_x
     (0, 15),  # top_corner_y
-    (25, 75), # bottom_corner_x
+    (10, 60), # bottom_corner_x
     (0, 15)   # bottom_corner_y
 ]
 
@@ -92,6 +95,12 @@ with open("config.txt", "r") as file:
 
 # Split arguments into array of strings
 starting_state = [arg for arg in input().split(" ") if arg]
+
+strlog = "Arguments received:\n"
+for arg in starting_state:
+    strlog += f" {arg}"
+with open('merda.txt', 'w') as fp:
+    fp.write(strlog)
 
 # Ensure correct number of arguments
 if len(starting_state) != (len(ranges) + 2):
@@ -118,7 +127,7 @@ def within_range(num, range):
 if not all([within_range(arg, ranges[i]) for i, arg in enumerate(starting_state[2:])]):
     sys.exit("Invalid input: argument out of range")
 
-strategies, trace_name, path_length, person_x, person_y, car_x, car_y, top_corner_x, top_corner_y, bottom_corner_x, bottom_corner_y = starting_state
+strategies, trace_name, path_length, person_x, person_y, car_x, car_y, car_v, top_corner_x, top_corner_y, bottom_corner_x, bottom_corner_y = starting_state
 
 # Ensure strat_name is in list of available options
 
@@ -165,7 +174,7 @@ for i in range(len(strat_list)):
     with open(strat_files[strat_name], 'r') as file:
         template = file.read()
     program = template.format(person_x = person_x, person_y = person_y, 
-                            car_x = car_x, car_y = car_y, 
+                            car_x = car_x, car_y = car_y, car_v = car_v,
                             top_corner_x = top_corner_x, top_corner_y = top_corner_y,  
                             bottom_corner_x = bottom_corner_x, bottom_corner_y = bottom_corner_y)    
     with open(f"program_{strat_name}.pm", 'w') as fp:
@@ -177,7 +186,7 @@ for i in range(len(strat_list)):
     if i == 0:
         with open(path_to_generated_mdp, "r") as fp:
             mdptemp = fp.read()
-        mdpprogram = mdptemp.format(person_x = person_x, person_y = person_y, car_x = car_x, car_y = car_y, top_corner_x = top_corner_x, top_corner_y = top_corner_y,  bottom_corner_x = bottom_corner_x, bottom_corner_y = bottom_corner_y)
+        mdpprogram = mdptemp.format(person_x = person_x, person_y = person_y, car_x = car_x, car_y = car_y, car_v = car_v, top_corner_x = top_corner_x, top_corner_y = top_corner_y,  bottom_corner_x = bottom_corner_x, bottom_corner_y = bottom_corner_y)
         with open("mdpprogram.pm", "w") as fp:
             fp.write(mdpprogram)
         trace_filepath = "temp/path.txt"

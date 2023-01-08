@@ -12,3 +12,5 @@ dictdict.json
 generated.pm
 package-lock.json
 trace_input.txt
+path_somes/*
+path_crash10/*

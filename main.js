@@ -34,12 +34,12 @@ let running = false;
 
 io.on('connection', (socket) => {
   emitLog(`User connected to socket (${socket.conn.request.socket.remoteAddress}) (${socket.id})`);
-  socket.on('generate', (strat_name, trace_name, path_length, person_x, person_y, car_x, car_y, top_corner_x, top_corner_y, bottom_corner_x, bottom_corner_y) => {
-    emitLog(`Generate received with args: ${[strat_name, trace_name, path_length, person_x, person_y, car_x, car_y, top_corner_x, top_corner_y, bottom_corner_x, bottom_corner_y].join(' ')}`);
+  socket.on('generate', (strat_name, trace_name, path_length, person_x, person_y, car_x, car_y, car_v, top_corner_x, top_corner_y, bottom_corner_x, bottom_corner_y) => {
+    emitLog(`Generate received with args: ${[strat_name, trace_name, path_length, person_x, person_y, car_x, car_y, car_v, top_corner_x, top_corner_y, bottom_corner_x, bottom_corner_y].join(' ')}`);
     queue.push((closed) => {
       // const runner = spawn('python3', ['prism_runner.py', `${strat_name}`, `${path_length}`, `${person_x}`, `${person_y}`, `${car_x}`, `${car_y}`, `${top_corner_x}`, `${top_corner_y}`, `${bottom_corner_x}`, `${bottom_corner_y}`], { timeout: 50000 });
       const runner = spawn('python3', ['prism_runner.py'], { timeout: 50000 });
-      runner.stdin.write(`${strat_name} ${trace_name} ${path_length} ${person_x} ${person_y} ${car_x} ${car_y} ${top_corner_x} ${top_corner_y} ${bottom_corner_x} ${bottom_corner_y}`);
+      runner.stdin.write(`${strat_name} ${trace_name} ${path_length} ${person_x} ${person_y} ${car_x} ${car_y} ${car_v} ${top_corner_x} ${top_corner_y} ${bottom_corner_x} ${bottom_corner_y}`);
       runner.stdin.end();
 
       // Must have buffer because chunk size from python is smaller than full path (over path_length of 100)

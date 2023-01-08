@@ -1,7 +1,7 @@
 mdp
 
-const int street_length = 75;
-const int min_street_length = 25;
+const int street_length = 60;
+const int min_street_length = 10;
 const int sidewalk_height = 2;
 
 const int crosswalk_pos = 45;
@@ -50,32 +50,80 @@ formula car_close_ped_rv = (ped_x - car_x < 2*(car_v-1)); // rv: reckless versio
 formula is_within_shot = (ped_y >= car_y) & (ped_y <= car_y + car_height);
 
 // formula allowed_to_brake = (car_v > 0) & (ped_x > car_x) & (dist < 15);
-formula allowed_to_brake = ((car_v > 0) & (dist < 15)) | (dist < 10);
-// formula allowed_to_noop = (car_v > 0) & (ped_x > car_x) & (dist < 15);
+formula allowed_to_brake = ((car_v > 3) & (dist < 15)) | ((car_v > 0) & (dist < 10)) | (dist < 5);
+formula allowed_to_noop =  (car_v > 0) | (dist < 5);
+
+// Constants used later in the car module
+formula is_slippery = (car_x > 40) & (car_x < 60);
+
+const double slippery_factor = 2;
+
+const double acc2_prob = 0.45;
+const double acc1_prob = 0.45;
+const double acc0_prob = 1-acc1_prob-acc2_prob;
+
+const double acc2_prob_s = 0.225;
+const double acc1_prob_s = 0.225;
+const double acc0_prob_s = 1-acc1_prob_s-acc2_prob_s;
+
+const double brk2_prob = 0.45;
+const double brk1_prob = 0.45;
+const double brk0_prob = 1-brk1_prob-brk2_prob;
+
+const double brk2_prob_s = 0.225;
+const double brk1_prob_s = 0.225;
+const double brk0_prob_s = 1-brk1_prob_s-brk2_prob_s;
+
+const double noop0 = 0.9;
+const double noop1 = 0.1;
 
 module Car
 car_x : [min_street_length..street_length] init 25; //{car_x};
-car_v : [0..max_speed] init 0;
+car_v : [0..max_speed] init 0; //{car_v}
 finished : [0..1] init 0;
 
     // changes the visibility variable so we know when the car is able/unable to see ped
     [] (turn = 0) -> (turn'=1);
 
-	[accelerate] (turn = 1) & (finished=0) & (car_x < street_length) & (crashed=0) -> // Accelerate
-	0.45: (car_v' = min(max_speed, car_v + 2))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 2)))&(turn' = 2) +
-	0.45: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 2) +
-	0.10: (car_x' = min(street_length, car_x + car_v + 0))&(turn' = 2);
+	[accelerate] (turn = 1) & (finished=0) & (car_x < street_length) & (crashed=0) & (!is_slippery) -> // Accelerate
+	acc2_prob: (car_v' = min(max_speed, car_v + 2))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 2)))&(turn' = 2) +
+	acc1_prob: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 2) +
+	acc0_prob: (car_x' = min(street_length, car_x + car_v + 0))&(turn' = 2);
 
-	[brake] (turn = 1) & (finished=0) & (car_x < street_length) & (crashed=0) & (allowed_to_brake) -> //& (car_v > 0) -> // Brake
-	0.45: (car_v' = max(0, car_v - 2))&(car_x' = min(street_length, car_x + max(0, car_v - 2)))&(turn' = 2) + 
-	0.45: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 2) +
-	0.10: (car_x' = min(street_length, car_x + car_v + 0))&(turn' = 2);
+	[accelerateSlippery] (turn = 1) & (finished=0) & (car_x < street_length) & (crashed=0) & (is_slippery) -> // Accelerate
+	acc2_prob_s: (car_v' = min(max_speed, car_v + 2))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 2)))&(turn' = 2) +
+	acc1_prob_s: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 2) +
+	acc0_prob_s: (car_x' = min(street_length, car_x + car_v + 0))&(turn' = 2);
+
+	[brake] (turn = 1) & (finished=0) & (car_x < street_length) & (crashed=0) & (allowed_to_brake) & (!is_slippery) -> //& (car_v > 0) -> // Brake
+	brk2_prob: (car_v' = max(0, car_v - 2))&(car_x' = min(street_length, car_x + max(0, car_v - 2)))&(turn' = 2) + 
+	brk1_prob: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 2) +
+	brk0_prob: (car_x' = min(street_length, car_x + car_v + 0))&(turn' = 2);
+
+	[brakeSlippery] (turn = 1) & (finished=0) & (car_x < street_length) & (crashed=0) & (allowed_to_brake) & (is_slippery) -> //& (car_v > 0) -> // Brake
+	brk2_prob_s: (car_v' = max(0, car_v - 2))&(car_x' = min(street_length, car_x + max(0, car_v - 2)))&(turn' = 2) + 
+	brk1_prob_s: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 2) +
+	brk0_prob_s: (car_x' = min(street_length, car_x + car_v + 0))&(turn' = 2);
+
+	[brakeNoop] (turn = 1) & (finished=0) & (car_x < street_length) & (crashed=0) & (!allowed_to_brake) -> //& (car_v > 0) -> // Brake
+	noop0: (car_x' = min(street_length, car_x + max(0, car_v)))&(turn' = 2) +
+	noop1: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 2);
 	
-	[nop] (turn = 1) & (finished=0) & (car_x < street_length) & (crashed=0) & (allowed_to_brake)-> // Stays the same speed
-	0.80: (car_x' = min(street_length, car_x + max(0, car_v)))&(turn' = 2) +
-	0.10: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 2) +  //breaks
-	0.10: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 2); //accelerates
+	[nop] (turn = 1) & (finished=0) & (car_x < street_length) & (crashed=0) & (allowed_to_noop)-> // Stays the same speed
+	noop0: (car_x' = min(street_length, car_x + max(0, car_v)))&(turn' = 2) +
+	noop1: (car_v' = max(0, car_v - 1))&(car_x' = min(street_length, car_x + max(0, car_v - 1)))&(turn' = 2);
+	
+	[nopAccel] (turn = 1) & (finished=0) & (car_x < street_length) & (crashed=0) & (!allowed_to_noop) & (!is_slippery)-> // Stays the same speed
+	acc2_prob: (car_v' = min(max_speed, car_v + 2))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 2)))&(turn' = 2) +
+	acc1_prob: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 2) +
+	acc0_prob: (car_x' = min(street_length, car_x + car_v + 0))&(turn' = 2);
 
+	[nopAccelSlippery] (turn = 1) & (finished=0) & (car_x < street_length) & (crashed=0) & (!allowed_to_noop) & (is_slippery)-> // Stays the same speed
+	acc2_prob: (car_v' = min(max_speed, car_v + 2))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 2)))&(turn' = 2) +
+	acc1_prob: (car_v' = min(max_speed, car_v + 1))&(car_x' = min(street_length, car_x + min(max_speed, car_v + 1)))&(turn' = 2) +
+	acc0_prob: (car_x' = min(street_length, car_x + car_v + 0))&(turn' = 2);
+
+	
 	[] (turn = 1) & (finished = 0) & ((car_x = street_length) | (crashed=1)) -> (finished'=1);
 	[] (turn = 1) & (finished = 1) -> true;
 	
@@ -93,7 +141,7 @@ formula on_crosswalk = (ped_x >= crosswalk_pos) & (ped_x <= crosswalk_pos+crossw
 // Can only affect when pedestrian is not on sidewalk anymore
 formula danger_to_cross = (car_close_ped) & (car_v > 2) & (car_y - ped_y = 1);
 formula danger_to_stay = (car_close_ped) & (car_v > 2) & (car_y - ped_y < 1) & (car_y+car_height >= ped_y);
-const double hesitat_prob = 0.4;
+const double hesitant_factor = 0.4;
 
 module Pedestrian
 	ped_x : [min_street_length..street_length] init (crosswalk_pos - 5); // {person_x}
@@ -102,8 +150,8 @@ module Pedestrian
 	// When pedestrian is not on sidewalk anymore, can only stop or cross, cannot go back
 	// If hesitant, checks if it is unsafe to stop or cross and reduces probabilities by hesitant_prob
 	[] (turn = 2)&(!crash)&(!is_on_sidewalk)&(!danger_to_cross)&(!danger_to_stay) -> 0.7: (ped_y'=min(world_height, ped_y+1))&(turn'=0) + 0.3: (turn'=0);
-	[] (turn = 2)&(!crash)&(!is_on_sidewalk)&(danger_to_cross) -> 0.7*hesitat_prob: (ped_y'=min(world_height, ped_y+1))&(turn'=0) + 1-0.7*hesitat_prob: (turn'=0);
-	[] (turn = 2)&(!crash)&(!is_on_sidewalk)&(danger_to_stay) -> 1-0.3*hesitat_prob: (ped_y'=min(world_height, ped_y+1))&(turn'=0) + 0.3*hesitat_prob: (turn'=0);
+	[] (turn = 2)&(!crash)&(!is_on_sidewalk)&(danger_to_cross) -> 0.7*hesitant_factor: (ped_y'=min(world_height, ped_y+1))&(turn'=0) + 1-0.7*hesitant_factor: (turn'=0);
+	[] (turn = 2)&(!crash)&(!is_on_sidewalk)&(danger_to_stay) -> 1-0.3*hesitant_factor: (ped_y'=min(world_height, ped_y+1))&(turn'=0) + 0.3*hesitant_factor: (turn'=0);
 	
 	// When pedestrian is on sidewalk and crosswalk, starts crossing with high probability
 	[] (turn=2)&(!crash)&(is_on_sidewalk)&(on_crosswalk) ->
