@@ -132,7 +132,7 @@ def make_dtmc(temp):
         
 
 
-def main(prism_file="", use_visibility=False, hesitant_pedestrian=False):
+def main(prism_file=""):
    
 
     # If prism file is given (executing normally should be prism_files/mdp.pm), use it. If empty, ask user for it.
@@ -141,6 +141,7 @@ def main(prism_file="", use_visibility=False, hesitant_pedestrian=False):
 
     process_params()
     # makes ones mdp file
+
     make_mdp(prism_file)
     # makes one dtmc file per strategy listed in the json file
     make_dtmc(prism_file)

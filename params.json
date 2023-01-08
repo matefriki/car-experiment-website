@@ -1,5 +1,5 @@
 {
-  "use_visibility": false,
+  "use_visibility": true,
   "hesitant_factor": 1,
   "acc2_prob": 0.45,
   "acc1_prob": 0.45,

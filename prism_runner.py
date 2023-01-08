@@ -13,13 +13,12 @@ import graph_generator
 import pickle
 
 DEBUG = False # Turning this Debug flag to true gives you more input, and may mess up main.js
-USE_VISIBILITY = False
-HESITANT_PEDESTRIAN = True
+
+with open('params.json', 'r') as fp:
+    params = json.load(fp)
 
 # totalstart = time.process_time()
 totalstart = datetime.datetime.now()
-
-print("hola hola\n")
 
 
 def load_path(file_name):
@@ -155,10 +154,8 @@ for strat_name in strat_list:
 
 path_to_generated_mdp = "temp/mdpgenerated.pm"
 
-if USE_VISIBILITY:
-    strat_generator.main("prism_files/mdp.pm", use_visibility = USE_VISIBILITY, hesitant_pedestrian = HESITANT_PEDESTRIAN)
-else:
-    strat_generator.main("prism_files/mdp_novis.pm", use_visibility = USE_VISIBILITY, hesitant_pedestrian = HESITANT_PEDESTRIAN)
+mdptemplatefile = f"prism_files/mdp{'' if params['use_visibility'] else '_novis'}.pm"
+strat_generator.main(mdptemplatefile)
 
 df1array = []
 
@@ -196,14 +193,14 @@ for i in range(len(strat_list)):
             os.system("{} mdpprogram.pm -simpath {} {} >/dev/null 2>&1".format(prism_path, path_length, trace_filepath)) # >/dev/null 2>&1
             time.sleep(.1)
         path = load_path(trace_filepath)
-        if not USE_VISIBILITY:
+        if not params['use_visibility']:
             path["visibility"] = [1 for i in range(len(path["action"]))]
             path["seen_ped"] = [1 for i in range(len(path["action"]))]
         print(json.dumps(path))
 
 
         # os.system("python3 trace_convert.py")
-        ordered_list_of_states = trace_convert.main(trace_filepath, USE_VISIBILITY)
+        ordered_list_of_states = trace_convert.main(trace_filepath, params['use_visibility'])
         modify_inits('mdpprogram.pm', 'trace_input.txt')
         # auxtimestart = time.process_time()
         auxtimestart = datetime.datetime.now()

@@ -137,7 +137,7 @@ window.addEventListener('load', () => {
 
     // Create sprite for filled block itself
     let block = new PIXI.Graphics();
-    block.beginFill(0xFFFFFF, 0); //opacity to zero if use_visibility = false
+    block.beginFill(0xFFFFFF, 0.5); //opacity to zero if use_visibility = false
     block.tint = 0x03adfc;
     block.lineStyle(0, 0xFF0000);
     block.drawRect(0, 0, 300, 200);
