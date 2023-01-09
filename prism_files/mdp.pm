@@ -62,7 +62,8 @@ formula blocked_right = car_right & !ped_right & (d_x2y1 < 0) & (d_x1y2 > 0);
 formula blocked_middle = car_middle & (d_x1y2>0) & (d_x2y2 <0);
 
 // only consider visiblity blocks when pedestrian is below car
-formula no_vis = (blocked_left | blocked_right |blocked_middle ) & (cy > ped_y);
+// also, block needs to have min width of 1
+formula no_vis = (blocked_left | blocked_right |blocked_middle ) & (cy > ped_y) & (block_x1 < block_x2);
 
 // *******************************
 // **** End visibility stuff  ****
