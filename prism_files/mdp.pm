@@ -84,9 +84,9 @@ formula car_close_ped = (ped_x - car_x < 2*car_v);
 formula car_close_ped_rv = (ped_x - car_x < 2*(car_v-1)); // rv: reckless version
 formula is_within_shot = (ped_y >= car_y) & (ped_y <= car_y + car_height);
 
-// formula allowed_to_brake = (car_v > 0) & (ped_x > car_x) & (dist < 15);
-formula allowed_to_brake = ((car_v > 3) & (dist < 15)) | ((car_v > 0) & (dist < 10)) | (dist < 5);
+formula allowed_to_brake = (((car_v > 3) & (dist < 15)) | ((car_v > 0) & (dist < 10)) | (dist < 5)) & (seen_ped=1);
 formula allowed_to_noop =  (car_v > 0) | (dist < 5);
+
 
 // Constants used later in the car module
 formula is_slippery = (car_x > 40) & (car_x < 60);

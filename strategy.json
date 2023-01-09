@@ -10,14 +10,14 @@
     "[nop]": "(((visibility=1)&(is_on_sidewalk_rv)&(car_close_ped_rv)&(car_v = 2)))"
 },
 "reckless": {
-    "[accelerate]": "((!is_within_shot) | (dist_x >= 15))",
-    "[brake]": "((is_within_shot)&(dist_x < 8))",
-    "[nop]": "((is_within_shot)&(dist_x < 15)&(dist_x >= 8))"
+    "[accelerate]": "((visibility=0) | (!is_within_shot) | (dist_x >= 15))",
+    "[brake]": "(visibility=1)&((is_within_shot)&(dist_x < 8))",
+    "[nop]": "(visibility=1)&((is_within_shot)&(dist_x < 15)&(dist_x >= 8))"
 },
  "corrupt": {
-    "[accelerate]": "((is_within_shot) | (dist_x - car_v > 5))",
-    "[brake]": "(!(is_within_shot) & (dist_x - car_v < 5))",
-    "[nop]": "(!(is_within_shot) & (dist_x - car_v = 5))"
+    "[accelerate]": "((is_within_shot) | (dist_x - car_v > 8))",
+    "[brake]": "(!(is_within_shot) & (dist_x - car_v < 8))",
+    "[nop]": "(!(is_within_shot) & (dist_x - car_v = 8))"
 },
 "accelerator": {
     "[accelerate]": "true",

@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from matplotlib import rc
 from matplotlib import pyplot as plt
-import json
+import json,os, re
 
 COLORBOX = ['#ca06b8', '#ca9236', '#5132c7', '#3bf48c', '#bed092']
 COLORS_BY_STRAT = {'cautious':'#89a348', 'reckless':'#bd2f9e', 'corrupt':'#1e4054'}
@@ -67,13 +67,15 @@ def secondPlot(dfarray, states, state_ticks, state_labels, idx=0, strat_names=['
         strat_name = strat_names[i]
         ro1 = []
         ro1 = (df['P'] - df['Pmin'])/(df['Pmax'] - df['Pmin'])
+        agency = df['Pmax'] - df['Pmin']
+        agency_weights = agency/agency.sum()
+        ro_weighted = ro1*agency_weights
         markerused = 'o' if strat_name not in MARKERS_BY_STRAT else MARKERS_BY_STRAT[strat_name]
         colorused = COLORBOX[i%len(COLORBOX)] if strat_name not in COLORS_BY_STRAT else COLORS_BY_STRAT[strat_name]
         axs2.plot(states, ro1, color = colorused, marker = markerused, label = f"rho {strat_name}", zorder=10, clip_on=False)
-        axs2.axhline(y = ro1.mean(), color = colorused, linestyle = '--', label = "rho1 Mean")
-
+        axs2.axhline(y = ro_weighted.sum(), color = colorused, linestyle = '--', label = f"rho1 Mean = {ro_weighted.sum():.2f}")
     # plotting the data
-    axs2.bar(states, roDiff, roDiffWidth, color = '#DBDBDB', edgecolor = '#BFBFBF')
+    axs2.bar(states, roDiff, roDiffWidth, color = '#DBDBDB', edgecolor = '#BFBFBF',label=f"Acc. Agency = {roDiff.sum():.2f}")
     axs2.axvline(x = idx)
     axs2.legend()
 
@@ -87,6 +89,68 @@ def secondPlot(dfarray, states, state_ticks, state_labels, idx=0, strat_names=['
         
     # axs2.margins(0)
     plt.savefig("temp/graph_right.png")
+
+def parse_params_from_str(filename):
+    parsed_params = {}
+    slippery_range = re.compile('sliprange=[+-]?([0-9]*[.])?[0-9]+').search(filename).group().split('=')[-1].replace('.', ',')
+    slippery_factor = re.compile('slipfact=[+-]?([0-9]*[.])?[0-9]+').search(filename).group().split('=')[-1]
+    hesitant_factor = re.compile('hesfact=[+-]?([0-9]*[.])?[0-9]+').search(filename).group().split('=')[-1]
+    use_visibility = re.compile('visblock=[a-zA-Z]*').search(filename).group().split('=')[-1]
+    strategy = filename.split('_')[-1].split('.')[0]
+    return slippery_range, slippery_factor, hesitant_factor, use_visibility, strategy
+
+def counterfactualScatterPlot(folder_to_save, differentiate_visibility=False):
+    counterfactual_df = pd.DataFrame(columns=['slippery_range', 'slippery_factor','hesitant_factor','use_visibility', 'strategy', 'agency','intention'],
+                                index = range(len(os.listdir(folder_to_save))))
+    curr_idx = 0
+    for filename in os.listdir(folder_to_save):
+        if filename.split('.')[-1] == 'csv':
+            slippery_range, slippery_factor, hesitant_factor, use_visibility, strategy = parse_params_from_str(filename)
+            df = pd.read_csv(f"{folder_to_save}/{filename}")
+            df['agency'] = df.Pmax - df.Pmin
+            df['intention'] = (df.P - df.Pmin)/df.agency
+            df = df[df.agency > 0]
+            df['agency_weights'] = df.agency/df.agency.sum()
+            df['intention_weighted'] = df.intention*df.agency_weights
+
+            intention = df.intention_weighted.sum()
+            mean_agency = df.agency.mean()
+            counterfactual_df.loc[curr_idx, :] = [slippery_range, slippery_factor, hesitant_factor, use_visibility,strategy,mean_agency,intention]
+            curr_idx += 1
+    counterfactual_df = counterfactual_df[counterfactual_df.index < curr_idx]
+    
+    counterfactual_df['color'] = "none"
+
+    for i in counterfactual_df.index:
+        counterfactual_df.loc[i,'color'] = COLORS_BY_STRAT[counterfactual_df.loc[i,'strategy']]
+    
+    counterfactual_df['agency_weights'] = counterfactual_df.agency/counterfactual_df.agency[counterfactual_df.strategy=='cautious'].sum()
+    counterfactual_df['intention_weighted'] = counterfactual_df.agency_weights*counterfactual_df.intention
+    visibilities = [{"True"}, {"False"}, {"True", "False"}] if differentiate_visibility else [{"True", "False"}]
+    
+    for visibility in visibilities:
+        fig, axs1 = plt.subplots(figsize = (7, 5))
+
+        for strat_name in counterfactual_df.strategy.unique():
+            slice_df = counterfactual_df[counterfactual_df.strategy == strat_name]
+            slice_df = slice_df[slice_df.use_visibility.isin(visibility)]
+            weighted_intention = slice_df.intention_weighted.sum()
+            axs1.scatter(x=slice_df.agency, y=slice_df.intention, 
+                      c = slice_df.color.unique()[0], label = f"{strat_name}, {weighted_intention:.2f}")
+
+        axs1.set_xlim(0,1)
+        axs1.set_ylim(0,1)
+        axs1.legend()
+        axs1.set_xlabel('Agency')
+        axs1.set_ylabel('Evidence for intention')
+        axs1.set_title('Counterfactual evaluation')
+
+
+        if differentiate_visibility:
+            plt.savefig(f"{folder_to_save}/A_Counterfactual_Graph_withvis_{visibility}.pdf")
+        else:
+            plt.savefig(f"{folder_to_save}/A_Counterfactual_Graph.pdf")
+
 
 def main(df1array, strat_names = ['strategy']):
     assert(len(df1array) == len(strat_names))
