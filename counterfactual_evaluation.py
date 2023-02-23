@@ -1,35 +1,65 @@
 import pandas as pd
-import json
 from tqdm import tqdm
-import time
-import os, re
-import subprocess
+import os, re, argparse, json, subprocess, random
 import graph_generator
 
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--trace', type=str, default='path_crash40_sample')
+    parser.add_argument('--strategies', type=str, default='cautious,reckless,corrupt')
+    args = parser.parse_args()
+    folder_to_save = args.trace
+    strategies_to_use = args.strategies
+
+
+    infile = 'inputtotest.txt'
+    with open(infile, 'r') as fp:
+        inputsetup = fp.read().split(' ')
+    inputsetup[1] = folder_to_save
+    inputsetup[0] = strategies_to_use
+    with open(infile, 'w') as fp:
+        fp.write(' '.join(inputsetup))
+    all_traces = [trace.split('.')[0] for trace in os.listdir('traces')]
+    assert folder_to_save in all_traces, 'Trace not where supposed to be'
+
+
     slippery_ranges = [(40, 50), (30,55)] # range of street x where car is slippery (min, max)
     slippery_factors = [1,1.5,2,2.5] # between 1 and inf, inf max slipperyness
     hesitant_factors = [0.3, 0.6, 1] # between 0 and 1, 0 max hesitancy
     visibility_usages = [True, False]
-    # folder_to_save = 'path_crash20'
-    folder_to_save = 'path_pass10'
-    folder_to_save = 'path_pass20'
-    folder_to_save = 'path_crash40'
-    folder_to_save = 'path_pass30'
     os.system(f"mkdir {folder_to_save}")
 
     all_counterfactuals_array = []
-    for slippery_range in slippery_ranges:
-        for slippery_factor in slippery_factors:
-            for hesitant_factor in hesitant_factors:
-                for visibility_use in visibility_usages:
-                    all_counterfactuals_array.append({'slippery_range':slippery_range,
-                                                   'slippery_factor':slippery_factor,
-                                                   'hesitant_factor':hesitant_factor,
-                                                   'use_visibility':visibility_use})
-    
+    # for slippery_range in slippery_ranges:
+    #     for slippery_factor in slippery_factors:
+    #         for hesitant_factor in hesitant_factors:
+    #             for visibility_use in visibility_usages:
+    #                 all_counterfactuals_array.append({'slippery_range':slippery_range,
+    #                                                'slippery_factor':slippery_factor,
+    #                                                'hesitant_factor':hesitant_factor,
+    #                                                'use_visibility':visibility_use})
+    #num of counterfactuals = 50
+    slippery_range_inits = (20,40)
+    slippery_range_ends = (45,65)
+    slippery_factors = (1,4)
+    hesitant_factors = (0.1, 0.9)
+    n_counterfacts = 50
+    for i in range(n_counterfacts):
+        slippery_range_init = random.randrange(slippery_range_inits[0], slippery_range_inits[1])
+        slippery_range_end = random.randrange(slippery_range_ends[0], slippery_range_ends[1])
+        slippery_range = (slippery_range_init, slippery_range_end)
+        slippery_factor = random.uniform(slippery_factors[0], slippery_factors[1])
+        hesitant_factor = random.uniform(hesitant_factors[0], hesitant_factors[1])
+        use_visibility = False if random.randint(0,1) == 0 else True
+        cf = {'slippery_range':slippery_range,
+                        'slippery_factor':slippery_factor,
+                        'hesitant_factor':hesitant_factor,
+                        'use_visibility':use_visibility}
+        all_counterfactuals_array.append(cf)
+        
+
     for cf in tqdm(all_counterfactuals_array):
         with open('params.json','r') as fp:
             params = json.load(fp)
@@ -41,7 +71,7 @@ def main():
             json.dump(params,fp,indent=2)
         outputfile = 'prism_output_file.txt'
         with open(outputfile, 'w') as foo:
-            with open('inputtotest.txt', 'r') as fin:
+            with open(infile, 'r') as fin:
                 p = subprocess.Popen(['python3', 'prism_runner.py'], stdin=fin, stdout=foo, shell=False)
                 try:
                     p.wait(100)

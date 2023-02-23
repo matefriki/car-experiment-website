@@ -108,8 +108,8 @@ def counterfactualScatterPlot(folder_to_save, differentiate_visibility=False):
             slippery_range, slippery_factor, hesitant_factor, use_visibility, strategy = parse_params_from_str(filename)
             df = pd.read_csv(f"{folder_to_save}/{filename}")
             df['agency'] = df.Pmax - df.Pmin
-            df['intention'] = (df.P - df.Pmin)/df.agency
             df = df[df.agency > 0]
+            df['intention'] = (df.P - df.Pmin)/df.agency
             df['agency_weights'] = df.agency/df.agency.sum()
             df['intention_weighted'] = df.intention*df.agency_weights
 
