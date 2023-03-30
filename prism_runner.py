@@ -204,33 +204,33 @@ for i in range(len(strat_list)):
         modify_inits('mdpprogram.pm', 'trace_input.txt')
         # auxtimestart = time.process_time()
         auxtimestart = datetime.datetime.now()
-        client = docker.from_env()     
-        aux = client.containers.run("lposch/tempest-devel-traces:latest", "storm --prism mdpprogram.pm --prop prism_files/mdp_props.props --trace-input trace_input.txt --exportresult mdpprops.json --buildstateval", volumes = {os.getcwd(): {'bind': '/mnt/vol1', 'mode': 'rw'}}, working_dir = "/mnt/vol1", stderr = True)
-        dockertime += (datetime.datetime.now() - auxtimestart).total_seconds()
-        outstr = aux.decode("utf-8")
-        with open('merda.txt', 'a') as fp:
-            fp.write(outstr)
-        # dockertime += time.process_time() - auxtimestart
-        for line in outstr.split('\n'):
-            if model_construction_string in line:
-                time_model_construction += float(line.split(model_construction_string)[-1].split('s.')[0])
-            if model_checking_string in line:
-                time_model_checking += float(line.split(model_checking_string)[-1].split('s.')[0])
+        # client = docker.from_env()     
+        # aux = client.containers.run("lposch/tempest-devel-traces:latest", "storm --prism mdpprogram.pm --prop prism_files/mdp_props.props --trace-input trace_input.txt --exportresult mdpprops.json --buildstateval", volumes = {os.getcwd(): {'bind': '/mnt/vol1', 'mode': 'rw'}}, working_dir = "/mnt/vol1", stderr = True)
+        # dockertime += (datetime.datetime.now() - auxtimestart).total_seconds()
+        # outstr = aux.decode("utf-8")
+        # with open('merda.txt', 'a') as fp:
+        #     fp.write(outstr)
+        # # dockertime += time.process_time() - auxtimestart
+        # for line in outstr.split('\n'):
+        #     if model_construction_string in line:
+        #         time_model_construction += float(line.split(model_construction_string)[-1].split('s.')[0])
+        #     if model_checking_string in line:
+        #         time_model_checking += float(line.split(model_checking_string)[-1].split('s.')[0])
     
     modify_inits(f'program_{strat_name}.pm', 'trace_input.txt')
     # auxtimestart = time.process_time()
     auxtimestart = datetime.datetime.now()
-    aux = client.containers.run("lposch/tempest-devel-traces:latest", f"storm --prism program_{strat_name}.pm --prop prism_files/dtmc_props.props --trace-input trace_input.txt --exportresult dtmc_{strat_name}_props.json --buildstateval", volumes = {os.getcwd(): {'bind': '/mnt/vol1', 'mode': 'rw'}}, working_dir = "/mnt/vol1", stderr = True)
-    dockertime += (datetime.datetime.now() - auxtimestart).total_seconds()
-    outstr = aux.decode("utf-8")
-    with open('merda.txt', 'a') as fp:
-            fp.write(outstr)
-    for line in outstr.split('\n'):
-        if model_construction_string in line:
-            time_model_construction += float(line.split(model_construction_string)[-1].split('s.')[0])
-        if model_checking_string in line:
-            time_model_checking += float(line.split(model_checking_string)[-1].split('s.')[0])
-    # dockertime += time.process_time() - auxtimestart
+    # aux = client.containers.run("lposch/tempest-devel-traces:latest", f"storm --prism program_{strat_name}.pm --prop prism_files/dtmc_props.props --trace-input trace_input.txt --exportresult dtmc_{strat_name}_props.json --buildstateval", volumes = {os.getcwd(): {'bind': '/mnt/vol1', 'mode': 'rw'}}, working_dir = "/mnt/vol1", stderr = True)
+    # dockertime += (datetime.datetime.now() - auxtimestart).total_seconds()
+    # outstr = aux.decode("utf-8")
+    # with open('merda.txt', 'a') as fp:
+    #         fp.write(outstr)
+    # for line in outstr.split('\n'):
+    #     if model_construction_string in line:
+    #         time_model_construction += float(line.split(model_construction_string)[-1].split('s.')[0])
+    #     if model_checking_string in line:
+    #         time_model_checking += float(line.split(model_checking_string)[-1].split('s.')[0])
+    # # dockertime += time.process_time() - auxtimestart
     if DEBUG:
         print(f"Time spent in docker is {dockertime} sec.\n")
         print(f"Time spent in model_construction is {time_model_construction} sec.\n")

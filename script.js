@@ -144,13 +144,27 @@ window.addEventListener('load', () => {
     block.name = "block";
 
     // Create graphics sprite for visibility line
-    line = new PIXI.Graphics();
+    let line = new PIXI.Graphics();
     line.position.set(0, 0);
     line.name = "visibility_line";
+
+    // Create graphics sprite for car trace line
+    let car_trace = new PIXI.Graphics();
+    car_trace.position.set(0, 0);
+    car_trace.lineStyle(3, 0x8c0010);
+    car_trace.name = "car_trace";
+
+    // Create graphics sprite for car trace line
+    let person_trace = new PIXI.Graphics();
+    person_trace.position.set(0, 0);
+    person_trace.lineStyle(3, 0x138c00);
+    person_trace.name = "person_trace";
 
     // Add all sprites to the Pixi stage
     app.stage.addChild(background);
     app.stage.addChild(line);
+    app.stage.addChild(car_trace);
+    app.stage.addChild(person_trace);
     app.stage.addChild(person);
     app.stage.addChild(car);
     app.stage.addChild(block);
@@ -194,7 +208,7 @@ window.addEventListener('load', () => {
         randBtn.addEventListener('click', () => {
             inputs.forEach((inp) => {
                 // If input not randomizable then do nothing
-                if(!inp.classList.contains("randomizable")) return;
+                if (!inp.classList.contains("randomizable")) return;
                 // Get object property that input edits
                 let prop = inp.dataset.prop;
                 // Parse the range for a given text input from the html
@@ -280,7 +294,7 @@ function adjustVisibilityLine(visible) {
     let off_y = (right_y - left_y) / segments;
 
     line.clear();
-    for(let i = 0; i < segments; i += 2) {
+    for (let i = 0; i < segments; i += 2) {
         line.lineStyle(2, visible ? 0x138c00 : 0x8c0010)
             .moveTo(left_x + (off_x * i), left_y + (off_y * i))
             .lineTo(left_x + (off_x * (i + 1)), left_y + (off_y * (i + 1)));
@@ -370,13 +384,13 @@ function setSpinnerVisibility(visible) {
 
 // Makes the replay button either fade in or disappear depending on the given boolean
 function setReplayVisibility(visible) {
-    if(visible) replay_btn.parentElement.style.display = "flex";
+    if (visible) replay_btn.parentElement.style.display = "flex";
     else replay_btn.parentElement.style.display = "none";
 }
 
 // Makes the replay button either greyed out or active depending on the given boolean
 function setReplayActive(active) {
-    if(active) replay_btn.classList.remove("disabled");
+    if (active) replay_btn.classList.remove("disabled");
     else replay_btn.classList.add("disabled");
 }
 
@@ -405,7 +419,7 @@ function setControlsActive(active) {
     let vel_prop = document.body.querySelector(".property.car-velocity");
     vel_prop.style.display = active ? "none" : "flex";
 
-    if(active) strat_bullet.classList.remove("disabled");
+    if (active) strat_bullet.classList.remove("disabled");
     else strat_bullet.classList.add("disabled");
 }
 
@@ -514,11 +528,23 @@ function animatePath(path) {
     let person = app.stage.getChildByName("person");
     let car = app.stage.getChildByName("car");
     let block = app.stage.getChildByName("block");
+    let car_trace = app.stage.getChildByName("car_trace");
+    let person_trace = app.stage.getChildByName("person_trace");
+
     path = JSON.parse(path);
     let path_length = path["action"].length;
     let path_ind = 0;
 
     let car_velocity = document.body.querySelector('.car-velocity .input');
+
+    for (let i = 0; i < path_length; i += 1) {
+        car_trace
+            .moveTo(parseInt(path["car_x"][i]) * unit, (world_height - 5) * unit)
+            .lineTo(parseInt(path["car_x"][i + 1]) * unit, (world_height - 5) * unit);
+        person_trace
+            .moveTo(parseInt(path["ped_x"][i]) * unit, (world_height - parseInt(path["ped_y"][i])) * unit)
+            .lineTo(parseInt(path["ped_x"][i + 1]) * unit, (world_height - parseInt(path["ped_y"][i + 1])) * unit);
+    }
 
     const ticker = new PIXI.Ticker();
     ticker.stop();
@@ -526,8 +552,8 @@ function animatePath(path) {
         setReplayActive(false);
         ticker.start();
     });
-    
-    
+
+
     let time = 0.0;
     ticker.add((delta) => {
         time += delta;
@@ -564,7 +590,7 @@ function animatePath(path) {
             // Reset delay
             time = 0.0;
 
-            if(path_ind >= path_length - 1) {
+            if (path_ind >= path_length - 1) {
                 ticker.stop();
                 path_ind = 0;
                 setReplayActive(true);

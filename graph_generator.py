@@ -23,7 +23,21 @@ def firstPlot(dfarray, states, state_ticks, state_labels, idx=0, strat_names=['s
         axs1.spines[spine].set_visible(False)
 
     # plotting data
-    axs1.fill_between(states, dfarray[0]['Pmin'], dfarray[0]['Pmax'], color = '#DBDBDB')
+    plotMin = []
+    plotMax = []
+    plotStates = []
+    plotWhere = []
+
+    for i in range(len(states)):
+        if dfarray[0]['Pmax'][i] != dfarray[0]['Pmin'][i]:
+            plotMin.append(dfarray[0]['Pmin'][i])
+            plotMax.append(dfarray[0]['Pmax'][i])
+            plotStates.append(i)
+            plotWhere.append(True)
+
+
+    # axs1.fill_between(states, dfarray[0]['Pmin'], dfarray[0]['Pmax'], color = '#DBDBDB')
+    axs1.fill_between(plotStates, plotMin, plotMax, where = plotWhere, color = '#DBDBDB')
     axs1.plot(states, dfarray[0]['Pmin'], color = '#1a4314', marker = 'o', label = "Pmin", zorder=10, clip_on=False, alpha=0.5)
     axs1.plot(states, dfarray[0]['Pmax'], color = '#8d0000', marker = 'o', label = "Pmax", zorder=10, clip_on=False, alpha=0.5)
 
