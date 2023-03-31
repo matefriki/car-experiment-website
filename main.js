@@ -22,7 +22,7 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
-let accessible_files = ["bullet/bullet.js", "bullet/bullet.css", "assets/replay.png", "assets/spin.png", "dropdown.js", "dropdown.css", "script.js", "style.css", "assets/person.png", "assets/car.png", "assets/scene.png", "assets/handle.png", "socket.io/socket.io.js", "fonts/Barlow-SemiBold.ttf"];
+let accessible_files = ["bullet/bullet.js", "bullet/bullet.css", "assets/replay.png", "assets/spin.png", "dropdown.js", "dropdown.css", "script.js", "style.css", "assets/person.png", "assets/car.png", "assets/scene.png", "assets/handle.png", "assets/icehandle.png", "socket.io/socket.io.js", "fonts/Barlow-SemiBold.ttf"];
 accessible_files.map((file_name) => {
   app.get(`/${file_name}`, (req, res) => {
     res.sendFile(__dirname + `/${file_name}`);
@@ -60,7 +60,7 @@ io.on('connection', (socket) => {
               console.error(err);
               return;
             }
-  
+
             setTimeout(() => socket.emit("graph_left", data), 500);
           });
 
@@ -69,7 +69,7 @@ io.on('connection', (socket) => {
               console.error(err);
               return;
             }
-  
+
             setTimeout(() => socket.emit("graph_right", data), 500);
           });
         }
@@ -79,7 +79,7 @@ io.on('connection', (socket) => {
               console.error(err);
               return;
             }
-  
+
             setTimeout(() => socket.emit("graph_left", data), 500);
           });
 
@@ -88,13 +88,13 @@ io.on('connection', (socket) => {
               console.error(err);
               return;
             }
-  
+
             setTimeout(() => socket.emit("graph_right", data), 500);
           });
         }
 
-        
-        
+
+
       });
     });
 

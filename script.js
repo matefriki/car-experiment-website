@@ -10,6 +10,7 @@ let trace_dropdown;
 let car_input_x, car_input_y, car_input_v;
 let person_input_x, person_input_y;
 let top_input_x, top_input_y, bottom_input_x, bottom_input_y;
+let ice_top_input_x, ice_top_input_y, ice_bottom_input_x, ice_bottom_input_y;
 
 /* Dimensions of 100x15 world in units, for use in converting between coords
    This is necessary because the origin of the model's world is in the bottom left corner,
@@ -55,6 +56,12 @@ window.addEventListener('load', () => {
     bottom_input_y = handle_inputs[1]; // Y1
     top_input_x = handle_inputs[2]; // X2
     top_input_y = handle_inputs[3]; // Y2
+
+    let ice_inputs = document.body.querySelectorAll('.pane.ice .input');
+    ice_bottom_input_x = ice_inputs[0]; // X1
+    ice_bottom_input_y = ice_inputs[1]; // Y1
+    ice_top_input_x = ice_inputs[2]; // X2
+    ice_top_input_y = ice_inputs[3]; //Y2
 
     // Find canvas to draw on from html and create PixiJS application
     let canvas = document.querySelector('.scene');
@@ -138,10 +145,50 @@ window.addEventListener('load', () => {
     // Create sprite for filled block itself
     let block = new PIXI.Graphics();
     block.beginFill(0xFFFFFF, 0.5); //opacity to zero if use_visibility = false
-    block.tint = 0x03adfc;
+    block.tint = 0xbcbcbc;
     block.lineStyle(0, 0xFF0000);
     block.drawRect(0, 0, 300, 200);
     block.name = "block";
+
+    // Create sprite for the bottom handle of the block
+    let ice_bottom_corner = PIXI.Sprite.from('assets/icehandle.png');
+    ice_bottom_corner.name = "ice_bottom_corner";
+    ice_bottom_corner.interactive = true;
+    ice_bottom_corner.buttonMode = true;
+    ice_bottom_corner.width = 2 * unit;
+    ice_bottom_corner.height = 2 * unit;
+    ice_bottom_corner.anchor.set(0.5);
+
+    // Register dragging events for bottom handle
+    ice_bottom_corner
+        .on('pointerdown', onDragStart)
+        .on('pointerup', onDragEnd)
+        .on('pointerupoutside', onDragEnd)
+        .on('pointermove', iceDragMove);
+
+    // Create sprite for the top handle of the block
+    let ice_top_corner = PIXI.Sprite.from('assets/icehandle.png');
+    ice_top_corner.name = "ice_top_corner";
+    ice_top_corner.interactive = true;
+    ice_top_corner.buttonMode = true;
+    ice_top_corner.width = 2 * unit;
+    ice_top_corner.height = 2 * unit;
+    ice_top_corner.anchor.set(0.5);
+
+    // Register dragging events for top handle
+    ice_top_corner
+        .on('pointerdown', onDragStart)
+        .on('pointerup', onDragEnd)
+        .on('pointerupoutside', onDragEnd)
+        .on('pointermove', iceDragMove);
+
+    // Create sprite for filled block itself
+    let ice = new PIXI.Graphics();
+    ice.beginFill(0xFFFFFF, 0.5); //opacity to zero if use_visibility = false
+    ice.tint = 0x03adfc;
+    ice.lineStyle(0, 0xFF0000);
+    ice.drawRect(0, 0, 300, 200);
+    ice.name = "ice";
 
     // Create graphics sprite for visibility line
     let line = new PIXI.Graphics();
@@ -170,11 +217,16 @@ window.addEventListener('load', () => {
     app.stage.addChild(block);
     app.stage.addChild(bottom_corner);
     app.stage.addChild(top_corner);
+    app.stage.addChild(ice);
+    app.stage.addChild(ice_bottom_corner);
+    app.stage.addChild(ice_top_corner);
 
     // Register events for all text inputs (sets up input restrictions)
     setupInputs();
     // Stretch filled rect between the two handles
     adjustBlock();
+    // Stretch filled ice rect between the two handles
+    adjustIce();
 
     // When generate button is pressed show progress bar and deactivate controls
     let generateBtn = document.querySelector('.generate .big_button');
@@ -272,6 +324,22 @@ function adjustBlock() {
     let diff_y = bottom.y - top.y;
     block.width = diff_x;
     block.height = diff_y;
+}
+
+/* Redraws the filled/translucent portion of the visibility block when the handles move
+   The visibility block is made up of two "handles" and then a filled rectangle "block" that's stretched between them */
+function adjustIce() {
+    // Get references to Pixi objects that make up the block
+    let top = app.stage.getChildByName("ice_top_corner");
+    let bottom = app.stage.getChildByName("ice_bottom_corner");
+    let ice = app.stage.getChildByName("ice")
+    // Resize and reposition the rectangle "block"
+    ice.x = top.x;
+    ice.y = top.y;
+    let diff_x = bottom.x - top.x;
+    let diff_y = bottom.y - top.y;
+    ice.width = diff_x;
+    ice.height = diff_y;
 }
 
 /* Redraws the visibility line when the pedestrian or car have moved (generates dotted line) */
@@ -517,6 +585,35 @@ function cornerDragMove() {
     adjustBlock();
 }
 
+// Handle both corners being dragged
+function iceDragMove() {
+    if (this.dragging) {
+        // Get current position of mouse cursor
+        const newPosition = this.data.getLocalPosition(this.parent);
+        // Update text inputs with new position, depending on which handle is moved (reflected vertically)
+        let range_x, range_y;
+        let isTopCorner = this.name == "ice_top_corner";
+        range_x = getInputRange(isTopCorner ? ice_top_input_x : ice_bottom_input_x);
+        range_y = getInputRange(isTopCorner ? ice_top_input_y : ice_bottom_input_y);
+        // Round mouse position to fit on grid, and clamp within world boundaries
+        let grid_x = clamp(Math.round(newPosition.x / unit), range_x[0], range_x[1]);
+        let grid_y = clamp(world_height - Math.round(newPosition.y / unit), range_y[0], range_y[1]);
+        // Update the text inputs to reflect new position
+        if (this.name == "ice_top_corner") {
+            ice_top_input_x.innerHTML = grid_x;
+            ice_top_input_y.innerHTML = grid_y;
+        } else {
+            ice_bottom_input_x.innerHTML = grid_x;
+            ice_bottom_input_y.innerHTML = grid_y;
+        }
+        // Resize grid coord by size of unit to get new position
+        this.x = grid_x * unit;
+        this.y = (world_height - grid_y) * unit;
+    }
+    // Rescale and position filled rect of block to reflect new handle positions
+    adjustIce();
+}
+
 // Display the generated path as an animation
 function animatePath(path) {
     console.log(path);
@@ -528,6 +625,7 @@ function animatePath(path) {
     let person = app.stage.getChildByName("person");
     let car = app.stage.getChildByName("car");
     let block = app.stage.getChildByName("block");
+    // let ice = app.stage.getChildByName("ice");
     let car_trace = app.stage.getChildByName("car_trace");
     let person_trace = app.stage.getChildByName("person_trace");
 
@@ -582,7 +680,8 @@ function animatePath(path) {
             person_input_y.innerHTML = person_grid_y;
 
             // Show visibility status
-            block.tint = (path["visibility"][path_ind] == "0" ? 0xFF0000 : 0x03adfc);
+            block.tint = (path["visibility"][path_ind] == "0" ? 0xFF0000 : 0xbcbcbc);
+            // ice.tint = (path["visibility"][path_ind] == "0" ? 0xFF0000 : 0x03adfc);
 
             // Stretch the visibility line between the car and the person
             adjustVisibilityLine(path["visibility"][path_ind] == "1");
